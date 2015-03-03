@@ -20,6 +20,13 @@ private:
 		}
 	};
 	Node *minNode;
+	int numItem;
+	void FindNextMin(Node* nextMin);
+	void RemoveMinTree(Type *item);
+	void CutSubTree(Node *rootIn);
+	void Reinsert(Node *firstChild, int degree);
+	void JoinMinTrees(Node *root1, Node *root2);
+	void PairwiseCombine();
 	
 public:
 	FibonacciHeap ();
@@ -28,17 +35,17 @@ public:
 
 	void Insert (Type *item);
 
-	Type* RemoveMin ();
+	int RemoveMin (Type *item);
 
-	Type* RemoveMax ();
+	//void RemoveMax (Type *item);
 
-	void Remove (Noed *removeMe);
+	void Remove (Node *removeMe);
 
 	void Meld (FibonacciHeap *heap1, FibonacciHeap *heap2);
 
 	void DecreaseKey (Node *decreaseMe, Type amount);
 
-	void IncreaseKey (Node *increaseMe, Type amount);
+	//void IncreaseKey (Node *increaseMe, Type amount);
 };
 
 
