@@ -25,6 +25,7 @@ private:
 	void RemoveMinTree(Type *item);
 	void CutSubTree(Node *rootIn);
 	void Reinsert(Node *firstChild, int degree);
+	void CascadingCut(Node *beginNode);
 	void JoinMinTrees(Node *root1, Node *root2);
 	void PairwiseCombine();
 	

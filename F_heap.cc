@@ -74,13 +74,7 @@ FibonacciHeap <Type> :: Remove (Node *rmMe){
 		Reinsert(rmMe->child, rmMe->degree);
 		delete rmMe;
 		--numItem;
-		while(parent->childCut == true && parent != NULL){
-			Node *newParent = parent->parent;
-			CutSubTree(parent);
-			Reinsert(parent, 1);
-			parent = newParent;
-		}
-		parent->childCut = true;
+		CascadingCut(parent);
 	}
 }
 
@@ -107,8 +101,10 @@ FibonacciHeap <Type> :: DecreaseKey (Node *decMe, Type amount){
 		return;
 	}
 	if(*(decMe->data) - amount < *(decMe->parent->data)){
+		Node *parent = decMe->parent;
 		CutSubTree(decMe);
 		Reinsert(decMe, 1);
+		CascadingCut(parent);
 	}
 }
 /*
@@ -169,6 +165,18 @@ void FibonacciHeap <Type> :: Reinsert(Node *firstChild, int degree){
 }
 
 template <class Type>
+void FibonacciHeap <Type> :: CascadingCut(Node *curNode){
+	while(curNode->childCut == true && curNode != NULL){
+		Node *parent = curNode->parent;
+		CutSubTree(curNode);
+		Reinsert(curNode, 1);
+		curNode = parent;
+	}
+	curNode->childCut = true;
+}
+
+
+template <class Type>
 void FibonacciHeap <Type> :: JoinMinTrees(Node *root1, Node *root2){
 	if(root2 == NULL){
 		return;
@@ -181,6 +189,7 @@ void FibonacciHeap <Type> :: JoinMinTrees(Node *root1, Node *root2){
 		root1->child->lsibling->rsibling = root2;
 		root1->child->lsibling = root2;
 		++root1->degree;
+		root1->childCut = false;
 	}
 }
 
