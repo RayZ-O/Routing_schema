@@ -8,54 +8,54 @@
 #include <cmath>
 
 template <class Type>
-struct Node	{
-	Type data;
-	int degree;
-	bool childCut;
-	Node *parent;
-	Node *child;
-	Node *lsibling;
-	Node *rsibling;
-
-	Node () : data (0), degree (0), childCut(false), parent (0), child (0), lsibling (0), rsibling(0) {}
-		
-	~Node () {
-	}
-};
-
-template <class Type>
 class FibonacciHeap{
 private:	
+	struct Node	{
+		Type data;
+		int degree;
+		bool childCut;
+		Node *parent;
+		Node *child;
+		Node *lsibling;
+		Node *rsibling;
+
+		Node () : data (), degree (0), childCut(false), parent (nullptr), child (nullptr), lsibling (nullptr), rsibling(nullptr) {}
+		~Node () {
+			parent = nullptr;
+			child = nullptr;
+			lsibling = nullptr;
+			rsibling = nullptr;
+		}
+	};
 	Node *minNode;
 	int numItem;
 
-	void InsertIntoDoublyList(Node *insertMe, Node *besideMe);
-
-	void CutSubTree (Node *rootIn);
-	void Reinsert (Node *firstChild, int degree);
-	void CascadingCut (Node *beginNode);
-	void FindNextMin (Node* aNode);
-	void JoinMinTrees (Node *root1, Node *root2);
-	void PairwiseCombine ();
+	void list_insert(Node *insertMe, Node *besideMe);
+	void list_remove(Node *eraseMe);
+	void meld_list (Node *firstListNode, Node *secondListNode);
+	void cut_subtree (Node *rootIn);
+	void cascading_cut (Node *beginNode);
+	void find_min (Node *aNode);
+	void join_min_trees (Node * &root1, Node * &root2);
+	void pairwise_combine ();
 	
 public:
 	FibonacciHeap ();
 
 	~FibonacciHeap ();
 
-	void Insert (Type &item);
+	void insert (Type item);
 
-	int RemoveMin (Type &item);
+	int remove_min (Type &item);
 
-	//void RemoveMax (Type *item);
+	void remove (Node *removeMe);
 
-	void Remove (Node *removeMe);
+	void meld (FibonacciHeap &heap);
 
-	void Meld (FibonacciHeap *heap1, FibonacciHeap *heap2);
+	void decrease_key (Node *decreaseMe, Type amount);
 
-	void DecreaseKey (Node *decreaseMe, Type &amount);
-
-	//void IncreaseKey (Node *increaseMe, Type amount);
+	int size();
+	void print();
 };
 
 

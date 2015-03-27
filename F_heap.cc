@@ -3,7 +3,7 @@
 
 
 template <class Type>
-FibonacciHeap <Type> :: FibonacciHeap() minNode(NULL), numItem(0) {
+FibonacciHeap <Type> :: FibonacciHeap() : minNode(nullptr), numItem(0) {
 }
 
 template <class Type>
@@ -11,26 +11,36 @@ FibonacciHeap <Type> :: ~FibonacciHeap (){
 
 }
 
+template <class Type> void
+FibonacciHeap <Type> :: print() {
+	Node *p = minNode;
+	do {
+		std::cerr << p->data << " ";
+		p = p->rsibling;
+	} while(p != minNode);
+	std::cerr << "\n";
+}
+
 // Add a new single-node min tree to the collection
 // Update min-element pointer if necessary
 template <class Type> void
-FibonacciHeap <Type> :: Insert (Type &item){
+FibonacciHeap <Type> :: insert (Type item){
 	Node *temp = new (std::nothrow) Node;
-	if (NULL == temp) {
+	if (nullptr == temp) {
 		std::cerr << "ERROR : Not enough memory. EXIT !!!\n";
 		exit(1);
 	}
-	//move semantic, consume the item
-	temp->data = std::move(item);
+	//add item to data field
+	temp->data = item;
 	//if the heap is empty, left and right sibling point to itself
-	if (NULL == minNode) {
+	if (nullptr == minNode) {
 		minNode = temp;
 		minNode->lsibling = minNode;
 		minNode->rsibling = minNode;
 	}
 	//if the heap is not empty, insert to top circular list
 	else {
-		InsertIntoDoublyList(temp, minNode);
+		list_insert(temp, minNode);
 		//update min-element pointer if necessary
 		if (temp->data < minNode->data) {
 			minNode = temp;
@@ -40,37 +50,32 @@ FibonacciHeap <Type> :: Insert (Type &item){
 	++numItem;
 } 
 
-// Meld heap2 to heap1, heap2 will be empty after meld
+// meld heap2 to heap1, heap2 will be empty after meld
 // Combine the 2 top-level circular lists.
 template <class Type> void 
-FibonacciHeap <Type> :: Meld (FibonacciHeap<Type> *heap1, FibonacciHeap<Type> *heap2){
-	if (NULL == heap1 || NULL == heap2){
-		std::cerr << "ERROR: Attempt to MELD non-exist heap\n";
-		exit(1);
-	}
+FibonacciHeap <Type> :: meld (FibonacciHeap<Type> &heap){
 	//if heap2 is empty, nothing to meld to heap1
-	if (NULL == heap2->minNode) {
+	if (nullptr == heap.minNode) {
 		return;
 	}
 	//if heap1 is empty, copy heap2 to heap1
-	else if (NULL == heap1->minNode) {
-		heap1->minNode = heap2->minNode;
-		heap1->numItem = heap2->numItem;
+	else if (nullptr == minNode) {
+		minNode = heap.minNode;
+		numItem = heap.numItem;
 		//consumed heap2
-		heap2->minNode = NULL;
-		heap2->numItem = 0;
+		heap.minNode = nullptr;
+		heap.numItem = 0;
 		return;
 	} else {
 		//update the heap pointer
-		heap1->minNode->rsibling->lsibling = heap2->minNode->lsibling;
-		heap2->minNode->lsibling->rsibling = heap1->minNode->rsibling;
-		heap1->minNode->rsibling = heap2->minNode;
-		heap2->minNode->lsibling = heap1->minNode;
+		meld_list(minNode, heap.minNode);
+		//update number of items
+		numItem += heap.numItem;
 		//update min pointer if necessary
-		heap1->minNode = (heap1->minNode->data < heap2->minNode->data)? heap1->minNode : heap2->minNode;
+		minNode = (minNode->data < heap.minNode->data)? minNode : heap.minNode;
 		//consumed heap2
-		heap2->minNode = NULL;
-		heap2->numItem = 0;
+		heap.minNode = nullptr;
+		heap.numItem = 0;
 	}	
 }
 
@@ -78,112 +83,199 @@ FibonacciHeap <Type> :: Meld (FibonacciHeap<Type> *heap1, FibonacciHeap<Type> *h
 // Reinsert subtrees of removed min tree
 // Update binomial heap pointer
 template <class Type> int
-FibonacciHeap <Type> :: RemoveMin (Type &item){
-	if (minNode == NULL) {
+FibonacciHeap <Type> :: remove_min (Type &item){
+	if (minNode == nullptr) {
 		return 0;
+	}
+
+	item = minNode->data;
+	//if the min node does not have children
+	if (nullptr == minNode->child) {
+		// list_remove(minNode);
+
+		minNode->rsibling->lsibling = minNode->lsibling;
+		minNode->lsibling->rsibling = minNode->rsibling;
+
+		Node *iter = minNode->rsibling;
+		Node *min = iter;
+		do {
+			if(iter->data < min->data){
+				min = iter;
+			}
+			iter = iter->rsibling;
+		} while(iter != minNode->rsibling);
+
+		//delete min node
+		delete minNode;	
+		minNode = min;
+	} 
+	else {
+		Node *childptr = minNode->child;
+		//set all children's parent field to nullptr and childCut field to false
+		do {
+			childptr->parent = nullptr;
+			childptr->childCut = false;
+			childptr = childptr->rsibling;
+		} while (childptr != minNode->child);
+		//take out min node and meld the children list into the top doubly linked list
+		childptr->lsibling->rsibling = minNode->rsibling;
+		minNode->rsibling->lsibling = childptr->lsibling;
+		childptr->lsibling = minNode->lsibling;
+		minNode->lsibling->rsibling = childptr;
+		//delete min node
+		delete minNode;	
+		//find the new min node
+		find_min(childptr);
 	}	
-	Node *childptr = minNode->child;
-	//set all children's parent field to NULL and childCut field to false
-	do {
-		childptr->parent = NULL;
-		childptr->childCut = false;
-		childptr = iter->rsibling;
-	} while (childptr != minNode->child);
-	//meld the children list into the top doubly linked list
-	childptr->lsibling->rsibling = minNode->rsibling;
-	minNode->rsibling->lsibling = childptr->lsibling;
-	childptr->lsibling = minNode->lsibling;
-	minNode->lsibling->rsibling = childptr;
-	//move data of minNode to item
-	item = std::move(minNode->data);
-	delete minNode;
-	//set temporary minNode for traversing in pairwise combine
-	FindNextMin(childptr);
-	//pairwise combine trees in heap and update heap pointer
-	PairwiseCombine();
+
+	// pairwise combine trees in heap and update heap pointer
+	pairwise_combine();
+	--numItem;
 	return 1;
 }
 
 template <class Type> void 
-FibonacciHeap <Type> :: Remove (Node *rmMe){
+FibonacciHeap <Type> :: remove (Node *rmMe){
+	if (nullptr == rmMe) {
+		std::cerr << "ERROR: Attempt to remove non-exist node\n";
+		exit(1);
+	}
 	//if the node is min node
-	if(rmMe == minNode){
+	if (rmMe == minNode) {
 		Type dummy;
-		removeMin(&dummy);
-	}else{
+		remove_min(dummy);
+	} else {
 		Node *parent = rmMe->parent;
-		//cut the subtree root in the node
-		CutSubTree(rmMe);
-		//reinsert its children
-		Reinsert(rmMe->child, rmMe->degree);
+		//cut the subtree rooted in the node
+		cut_subtree(rmMe);		
+		//update parent and childCut for all children of rmMe
+		//and find the minimum node
+		Node *iter = rmMe->child;
+		Node *min = rmMe->child;
+		do {
+			iter->parent = nullptr;
+			iter->childCut = false;
+			if (iter->data < min->data){
+				min = iter;
+			}
+			iter = iter->rsibling;
+		} while (iter != rmMe->child);
+		//meld the children list with top list
+		meld_list(iter, minNode);
+		//update min pointer if necessary
+		if (min->data < minNode) {
+			minNode = min;
+		}
+		//delete rmMe
 		delete rmMe;
+		//decrement number of items
 		--numItem;
-		//cascading cut from the not to root
-		CascadingCut(parent);
+		//cascading cut from the node to root
+		cascading_cut(parent);
 	}
 }
 
 
 
 template <class Type> void 
-FibonacciHeap <Type> :: DecreaseKey (Node *decMe, Type amount){
+FibonacciHeap <Type> :: decrease_key (Node *decMe, Type amount){
+	if (nullptr == decMe) {
+		std::cerr << "ERROR: Attempt to decrease non-exist node\n";
+		exit(1);
+	}
+	//decrease the key of decMe by amount
+	decMe->data -= amount;
 	//if decrease the root, nothing to do
-	if(decMe->parent == NULL){
+	if (decMe->parent == nullptr) {
+		//update min pointer if necessary
+		if (decMe->data < minNode) {
+			minNode = decMe;
+		}
 		return;
 	}
 	//if the key of the node less than parent, cut the subtree root in the node
-	if(*(decMe->data) - amount < *(decMe->parent->data)){
+	if (decMe->data < decMe->parent->data) {
 		Node *parent = decMe->parent;
-		CutSubTree(decMe);
-		Reinsert(decMe, 1);
-		CascadingCut(parent);
+		//cut the subtree rooted in the node
+		cut_subtree(decMe);
+		//meld the cut tree into top list
+		meld_list(decMe, minNode);
+		//update min pointer if necessary
+		if (decMe->data < minNode->data) {
+			minNode = decMe;
+		}
+		//cascading cut from the node to root
+		cascading_cut(parent);
 	}
+}
+
+template <class Type> int
+FibonacciHeap <Type> :: size () {
+	return numItem;
+}
+
+
+
+//insert into doubly linked list
+template <class Type>
+void FibonacciHeap <Type> :: list_insert(Node *insertMe, Node *besideMe) {
+	insertMe->rsibling = besideMe;
+	insertMe->lsibling = besideMe->lsibling;
+	besideMe->lsibling->rsibling = insertMe;
+	besideMe->lsibling = insertMe;
+}
+
+//insert into doubly linked list
+template <class Type>
+void FibonacciHeap <Type> :: list_remove(Node *eraseMe) {
+	eraseMe->lsibling->rsibling = eraseMe->rsibling;
+	eraseMe->rsibling->lsibling = eraseMe->lsibling;
+}
+
+
+//meld two doubly linked list
+template <class Type>
+void FibonacciHeap <Type> :: meld_list (Node *firstListNode, Node *secondListNode) {
+	firstListNode->rsibling->lsibling = secondListNode->lsibling;
+	secondListNode->lsibling->rsibling = firstListNode->rsibling;
+	firstListNode->rsibling = secondListNode;
+	secondListNode->lsibling = firstListNode;
 }
 
 //cut the subtree rooted in rootIn
 template <class Type>
-void FibonacciHeap <Type> :: CutSubTree(Node *rootIn){
+void FibonacciHeap <Type> :: cut_subtree(Node *rootIn){
 	rootIn->lsibling->rsibling = rootIn->rsibling;
 	rootIn->rsibling->lsibling = rootIn->lsibling;
 	rootIn->lsibling = rootIn;
 	rootIn->rsibling = rootIn;
-	--rootIn->parent->degree;
-	rootIn->parent = NULL;
-}
-
-//reinsert number of degree subtrees in the heap
-template <class Type>
-void FibonacciHeap <Type> :: Reinsert(Node *firstChild, int degree){
-	Node *temp = firstChild;
-	for(int i = 0; i< degree; i++){
-		temp->parent = NULL;
-		FibonacciHeap *p = new (std::nothrow) FibonacciHeap();
-		if (p == NULL){
-			cout << "ERROR : Not enough memory. EXIT !!!\n";
-			exit(1);
-		}
-		p->minNode = temp;
-		Meld(this, p);
-		temp = temp->rsibling;
-	}
+	rootIn->parent->degree -= 1;
+	rootIn->parent = nullptr;
+	rootIn->childCut = false;
 }
 
 //cascading cut when performing remove and decrease key
 template <class Type>
-void FibonacciHeap <Type> :: CascadingCut(Node *curNode){
+void FibonacciHeap <Type> :: cascading_cut(Node *curNode){
 	//from curNode to root, if childCut=true, cut the node
-	while(curNode->childCut == true && curNode != NULL){
+	while(curNode->childCut == true && curNode->parent != nullptr){
 		Node *parent = curNode->parent;
-		CutSubTree(curNode);
-		Reinsert(curNode, 1);
+		cut_subtree(curNode);
+		meld_list(curNode, minNode);
+		if (curNode->data < minNode->data) {
+			minNode = curNode;
+		}
 		curNode = parent;
 	}
-	curNode->childCut = true;
+	//if current node is not the root
+	if (curNode->parent != nullptr) {
+		curNode->childCut = true;
+	}	
 }
 
 //find the second minimal node in the heap
 template <class Type>
-void FibonacciHeap <Type> :: FindNextMin(Node* aNode){
+void FibonacciHeap <Type> :: find_min(Node* aNode){
 	Node *iter = aNode;
 	minNode = aNode;
 	do {
@@ -196,8 +288,8 @@ void FibonacciHeap <Type> :: FindNextMin(Node* aNode){
 
 //join two min tree when performing remove min
 template <class Type>
-void FibonacciHeap <Type> :: JoinMinTrees(Node *root1, Node *root2){
-	if (NULL == root1 || NULL == root2) {
+void FibonacciHeap <Type> :: join_min_trees(Node* &root1, Node* &root2){
+	if (nullptr == root1 || nullptr == root2) {
 		std::cerr << "ERROR: Join non-exist min tree in Pairwise Combine\n";
 		exit(1);
 	}
@@ -208,7 +300,12 @@ void FibonacciHeap <Type> :: JoinMinTrees(Node *root1, Node *root2){
 		//root1 become root2's parent
 		root2->parent = root1;
 		//insert root2 into root1's children list
-		InsertIntoDoublyList(root2, root1->child);
+		if (root1->degree != 0) {
+			list_insert(root2, root1->child);
+		} else {
+			root2->lsibling = root2;
+			root2->rsibling = root2;
+		}	
 		//root2 become root1's child
 		root1->child = root2;
 		//increment degree of root1
@@ -216,47 +313,48 @@ void FibonacciHeap <Type> :: JoinMinTrees(Node *root1, Node *root2){
 		//update the top linked list
 		root1->lsibling = prevTree;
 		prevTree->rsibling = root1;
-	} else {
+	} 
+	//root2 will be the new root
+	else {
 		//root2 become root1's parent
 		root1->parent = root2;
 		//insert root1 into root2's children list
-		InsertIntoDoublyList(root1, root2->child);
+		if (root2->degree != 0) {
+			list_insert(root1, root2->child);
+		} else {
+			root1->lsibling = root1;
+			root1->rsibling = root1;
+		}
+		//root1 become root2's child
 		root2->child = root1;
 		//increment degree of root2
 		root2->degree += 1;
 		//update the top linked list
-		root1->rsibling = nextTree;
-		nextTree->lsibling = root1;
+		root2->rsibling = nextTree;
+		nextTree->lsibling = root2;
+		root1 = root2;
 	}
 }
 
 template <class Type>
-void FibonacciHeap <Type> :: PairwiseCombine(){
+void FibonacciHeap <Type> :: pairwise_combine(){
 	//the max degree of trees in the heap is log2(n)
-	unsigned int max_degree = static_cast<int>(log2(numItem)) + 1;
+	unsigned int max_degree = log2(numItem) + 1;
 	//create the degree table
-	std::vector<Node*> tree(max_degree, NULL);
+	std::vector<Node*> tree(max_degree, nullptr);
 	//traverse all trees in the heap
 	Node *p = minNode;
-	int degree = 0;
+	int degree;
 	do {
 		//if there are two trees with the same degree in the heap
-		for (degree = p->degree; tree[degree]; degree++) {
+		for (degree = p->degree; tree[degree] != nullptr; degree++) {
 			//join two trees
-			JoinMinTrees(p, tree[degree]);
+			join_min_trees(p, tree[degree]);
 			//update tree table
-			tree[degree] = NULL;
+			tree[degree] = nullptr;
 		}
 		tree[degree] = p;
 		p = p->rsibling;	
 	} while (p != minNode);
 }
 
-
-template <class Type>
-void FibonacciHeap <Type> :: InsertIntoDoublyList(Node *insertMe, Node *besideMe) {
-	insertMe->rsibling = besideMe;
-	insertMe->lsibling = besideMe->lsibling;
-	besideMe->lsibling->rsibling = insertMe;
-	besideMe->lsibling = insertMe;
-}
