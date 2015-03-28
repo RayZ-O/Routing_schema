@@ -1,4 +1,4 @@
-#include "F_heap.h"
+#include "FibonacciHeap.h"
 
 
 
@@ -91,23 +91,25 @@ FibonacciHeap <Type> :: remove_min (Type &item){
 	item = minNode->data;
 	//if the min node does not have children
 	if (nullptr == minNode->child) {
-		// list_remove(minNode);
+		//if min node is the only node in the heap
+		if (minNode->rsibling == minNode) {
+			delete minNode;	
+			minNode = nullptr;
+		} else {
+			list_remove(minNode);
+			Node *iter = minNode->rsibling;
+			Node *min = iter;
+			do {
+				if(iter->data < min->data){
+					min = iter;
+				}
+				iter = iter->rsibling;
+			} while(iter != minNode->rsibling);
 
-		minNode->rsibling->lsibling = minNode->lsibling;
-		minNode->lsibling->rsibling = minNode->rsibling;
-
-		Node *iter = minNode->rsibling;
-		Node *min = iter;
-		do {
-			if(iter->data < min->data){
-				min = iter;
-			}
-			iter = iter->rsibling;
-		} while(iter != minNode->rsibling);
-
-		//delete min node
-		delete minNode;	
-		minNode = min;
+			//delete min node
+			delete minNode;	
+			minNode = min;
+		}		
 	} 
 	else {
 		Node *childptr = minNode->child;
@@ -150,22 +152,24 @@ FibonacciHeap <Type> :: remove (Node *rmMe){
 		cut_subtree(rmMe);		
 		//update parent and childCut for all children of rmMe
 		//and find the minimum node
-		Node *iter = rmMe->child;
-		Node *min = rmMe->child;
-		do {
-			iter->parent = nullptr;
-			iter->childCut = false;
-			if (iter->data < min->data){
-				min = iter;
+		if (rmMe->child != nullptr) {
+			Node *iter = rmMe->child;
+			Node *min = rmMe->child;
+			do {
+				iter->parent = nullptr;
+				iter->childCut = false;
+				if (iter->data < min->data){
+					min = iter;
+				}
+				iter = iter->rsibling;
+			} while (iter != rmMe->child);
+			//meld the children list with top list
+			meld_list(iter, minNode);
+			//update min pointer if necessary
+			if (min->data < minNode->data) {
+				minNode = min;
 			}
-			iter = iter->rsibling;
-		} while (iter != rmMe->child);
-		//meld the children list with top list
-		meld_list(iter, minNode);
-		//update min pointer if necessary
-		if (min->data < minNode) {
-			minNode = min;
-		}
+		}		
 		//delete rmMe
 		delete rmMe;
 		//decrement number of items
@@ -188,7 +192,7 @@ FibonacciHeap <Type> :: decrease_key (Node *decMe, Type amount){
 	//if decrease the root, nothing to do
 	if (decMe->parent == nullptr) {
 		//update min pointer if necessary
-		if (decMe->data < minNode) {
+		if (decMe->data < minNode->data) {
 			minNode = decMe;
 		}
 		return;
@@ -245,11 +249,18 @@ void FibonacciHeap <Type> :: meld_list (Node *firstListNode, Node *secondListNod
 //cut the subtree rooted in rootIn
 template <class Type>
 void FibonacciHeap <Type> :: cut_subtree(Node *rootIn){
+	//take rootIn out from sibling list
 	rootIn->lsibling->rsibling = rootIn->rsibling;
 	rootIn->rsibling->lsibling = rootIn->lsibling;
 	rootIn->lsibling = rootIn;
 	rootIn->rsibling = rootIn;
+	//decrement degree
 	rootIn->parent->degree -= 1;
+	//if rootIn's parent have no more children
+	if(0 == rootIn->parent->degree){
+		rootIn->parent->child = nullptr;
+	}
+	//update parent and childcut
 	rootIn->parent = nullptr;
 	rootIn->childCut = false;
 }
@@ -257,6 +268,10 @@ void FibonacciHeap <Type> :: cut_subtree(Node *rootIn){
 //cascading cut when performing remove and decrease key
 template <class Type>
 void FibonacciHeap <Type> :: cascading_cut(Node *curNode){
+	//if current node is null, nothing to cut
+	if (nullptr==curNode) {
+		return;
+	}
 	//from curNode to root, if childCut=true, cut the node
 	while(curNode->childCut == true && curNode->parent != nullptr){
 		Node *parent = curNode->parent;

@@ -1,34 +1,15 @@
-#include "F_heap.cc"
+
+#include "FibonacciHeap.cc"
+#include "Dijkstra.h"
 #include <iostream>
 
-int main () {
+
+
+
+int main (int argc, char *argv[]) {
 	FibonacciHeap<int> fh;
-	for(int i=1; i<12; i++){
-		fh.insert(i);
-	}
-	std::cout << "size is " << fh.size() << std::endl;
-	fh.print();
-	// int min;
-	// fh.remove_min(min);
-	// std::cout << "min is " << min << std::endl;
-	// std::cout << "size is " << fh.size() << std::endl;
-	// fh.print();
-	// fh.remove_min(min);
-	// std::cout << "min is " << min << std::endl;
-	// std::cout << "size is " << fh.size() << std::endl;
-	// fh.print();
+	Graph G;
 
-
-	FibonacciHeap<int> fh2;
-	for(int i=12; i<17; i++){
-		fh2.insert(i);
-	}
-	fh.meld(fh2);
-	std::cout << "size is " << fh.size() << std::endl;
-	fh.print();
-	int min;
-	fh.remove_min(min);
-	std::cout << "min is " << min << std::endl;
-	std::cout << "size is " << fh.size() << std::endl;
-	fh.print();
+	G.initGraph("input_1000_50_part1.txt");
+	G.print();
 }

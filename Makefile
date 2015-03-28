@@ -1,14 +1,17 @@
-CC=g++ -g -std=c++11 
+CC=g++ -g -std=c++11 -Wall
 
-heap.out: main.o F_heap.o
-	$(CC) -o heap.out main.o F_heap.o
+ssp: main.o FibonacciHeap.o Dijkstra.o
+	$(CC) -o ssp main.o FibonacciHeap.o Dijkstra.o
 
 main.o: main.cc
 	$(CC) -c main.cc -o main.o
 
-F_heap.o: F_heap.cc
-	$(CC) -c F_heap.cc -o F_heap.o
+Dijkstra.o: Dijkstra.cc
+	$(CC) -c Dijkstra.cc -o Dijkstra.o
+
+FibonacciHeap.o: FibonacciHeap.cc
+	$(CC) -c FibonacciHeap.cc -o FibonacciHeap.o
 
 clean: 
-	rm -f heap.out
+	rm -f ssp
 	rm -f *.o

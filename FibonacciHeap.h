@@ -5,10 +5,11 @@
 #include <cstdlib>
 #include <utility>
 #include <vector>
+#include <limits>
 #include <cmath>
 
 template <class Type>
-class FibonacciHeap{
+class FibonacciHeap {
 private:	
 	struct Node	{
 		Type data;
@@ -20,16 +21,13 @@ private:
 		Node *rsibling;
 
 		Node () : data (), degree (0), childCut(false), parent (nullptr), child (nullptr), lsibling (nullptr), rsibling(nullptr) {}
-		~Node () {
-			parent = nullptr;
-			child = nullptr;
-			lsibling = nullptr;
-			rsibling = nullptr;
+		~Node () {			
 		}
 	};
+
 	Node *minNode;
 	int numItem;
-
+	
 	void list_insert(Node *insertMe, Node *besideMe);
 	void list_remove(Node *eraseMe);
 	void meld_list (Node *firstListNode, Node *secondListNode);
@@ -40,6 +38,7 @@ private:
 	void pairwise_combine ();
 	
 public:
+	// Node *minNode;
 	FibonacciHeap ();
 
 	~FibonacciHeap ();
