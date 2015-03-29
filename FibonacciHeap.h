@@ -36,7 +36,6 @@ private:
 	int numItem;
 	
 	void list_remove(Node *eraseMe);
-	void list_insert(Node *firstListNode, Node *secondListNode);
 	void meld_list (Node *firstListNode, Node *secondListNode);
 	void cut_subtree (Node *rootIn);
 	void cascading_cut (Node *beginNode);

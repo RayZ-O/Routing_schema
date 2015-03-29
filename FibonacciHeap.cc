@@ -41,7 +41,7 @@ Node* FibonacciHeap :: insert (long item, int verID){
 	}
 	//if the heap is not empty, insert to top circular list
 	else {
-		list_insert(temp, minNode);
+		meld_list(temp, minNode);
 		//update min-element pointer if necessary
 		if (temp->data < minNode->data) {
 			minNode = temp;
@@ -176,43 +176,22 @@ void FibonacciHeap :: decrease_key (Node *decMe, long newData){
 	}
 	//decrease the key of decMe by amount
 	decMe->data = newData;
-	//if decrease the root, nothing to do
-	if (decMe->parent == nullptr) {
-		//update min pointer if necessary
-		if (decMe->data < minNode->data) {
-			minNode = decMe;
-		}
-		return;
-	}
-	//if the key of the node less than parent, cut the subtree root in the node
-	if (decMe->data < decMe->parent->data) {
-		Node *parent = decMe->parent;
+	Node *p = decMe->parent;
+	//if decMe has parent and the key of the node less than parent, cut the subtree root in the node
+	if (p != nullptr && decMe->data < p->data) {
 		//cut the subtree rooted in the node
 		cut_subtree(decMe);
-		//meld the cut tree into top list
-		meld_list(decMe, minNode);
-		//update min pointer if necessary
-		if (decMe->data < minNode->data) {
-			minNode = decMe;
-		}
 		//cascading cut from the node to root
-		cascading_cut(parent);
+		cascading_cut(p);
+	}
+	//update min pointer if necessary
+	if (decMe->data < minNode->data) {
+		minNode = decMe;
 	}
 }
 
 int FibonacciHeap :: size () {
 	return numItem;
-}
-
-
-
-//insert into doubly linked list
-
-void FibonacciHeap :: list_insert(Node *insertMe, Node *besideMe) {
-	insertMe->rsibling = besideMe;
-	insertMe->lsibling = besideMe->lsibling;
-	besideMe->lsibling->rsibling = insertMe;
-	besideMe->lsibling = insertMe;
 }
 
 //insert into doubly linked list
@@ -260,40 +239,39 @@ void FibonacciHeap :: find_next_min() {
 //cut the subtree rooted in rootIn
 
 void FibonacciHeap :: cut_subtree(Node *rootIn){
+	Node *p = rootIn->parent;
+	//decrement degree
+	p->degree -= 1;
+	if (rootIn == p->child && p->degree > 0) {
+		p->child = rootIn->rsibling;
+	} 
+	//if rootIn's parent have no more children
+	else if (0 == p->degree) {
+		p->child = nullptr;
+	}
 	//take rootIn out from sibling list
 	list_remove(rootIn);
-	//decrement degree
-	rootIn->parent->degree -= 1;
-	//if rootIn's parent have no more children
-	if(0 == rootIn->parent->degree){
-		rootIn->parent->child = nullptr;
-	}
+	//meld the cut tree into top list
+	meld_list(rootIn, minNode);	
 	//update parent and childcut
-	rootIn->parent = nullptr;
+	p = nullptr;
+	//rootIn go into top list, set childcut to false
 	rootIn->childCut = false;
 }
 
 //cascading cut when performing remove and decrease key
 
 void FibonacciHeap :: cascading_cut(Node *curNode){
-	//if current node is null, nothing to cut
-	if (nullptr==curNode) {
-		return;
-	}
-	//from curNode to root, if childCut=true, cut the node
-	while(curNode->childCut == true && curNode->parent != nullptr){
-		Node *parent = curNode->parent;
-		cut_subtree(curNode);
-		meld_list(curNode, minNode);
-		if (curNode->data < minNode->data) {
-			minNode = curNode;
+	Node *p = curNode->parent;
+	//if curNode has parent
+	if (p != nullptr) {
+		if (false == curNode->childCut) {
+			curNode->childCut = true;
+		} else {
+			cut_subtree(curNode);
+			cascading_cut(p);
 		}
-		curNode = parent;
 	}
-	//if current node is not the root
-	if (curNode->parent != nullptr) {
-		curNode->childCut = true;
-	}	
 }
 
 //join two min tree when performing remove min
@@ -310,15 +288,16 @@ Node* FibonacciHeap :: join_min_trees(Node* root1, Node* root2){
 		list_remove(root2);
 		//insert root2 into root1's children list
 		if (root1->degree != 0) {
-			list_insert(root2, root1->child);
+			meld_list(root2, root1->child);
 		} else {
-			root2->lsibling = root2;
-			root2->rsibling = root2;
-			//root2 become root1's child
+			//root2 become root1's first child
 			root1->child = root2;
+			root2->lsibling = root2;
+			root2->rsibling = root2;			
 		}			
 		//increment degree of root1
 		root1->degree += 1;
+		root2->childCut = false;
 		return root1;
 	} 
 	//root2 will be the new root
@@ -328,23 +307,26 @@ Node* FibonacciHeap :: join_min_trees(Node* root1, Node* root2){
 		root1->parent = root2;
 		//insert root1 into root2's children list
 		if (root2->degree != 0) {
-			list_insert(root1, root2->child);
+			meld_list(root1, root2->child);
 		} else {
-			root1->lsibling = root1;
-			root1->rsibling = root1;
-			//root1 become root2's child
+			//root1 become root2's first child
 			root2->child = root1;
+			root1->lsibling = root1;
+			root1->rsibling = root1;			
 		}		
 		//increment degree of root2
 		root2->degree += 1;
+		root2->childCut = false;
 		return root2;
 	}
 }
 
 
 void FibonacciHeap :: pairwise_combine(){
+	//compute golden ratio
+	constexpr float logGoldenRatio = log2(0.5*(1 + sqrt(5)));
 	//the max degree of trees in the heap is log2(n)
-	int max_degree = log2(numItem) + 1;
+	int max_degree = log2(numItem)/logGoldenRatio + 1;
 	//create the degree table
 	std::vector<Node*> tree;
 	tree.reserve(max_degree); 
