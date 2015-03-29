@@ -1,8 +1,26 @@
 #include "Dijkstra.h"
 
+Vertex::Vertex() : minWeight(-1), previous(-1), myNode(nullptr) { }
+
+//move constructor
+Vertex::Vertex (Vertex && moveMe) : minWeight(moveMe.minWeight), previous(moveMe.previous), myNode(moveMe.myNode) {
+	moveMe.myNode = nullptr;
+	adjacent_list = std::move(moveMe.adjacent_list);
+}
+
+//move assignment
+Vertex& Vertex::operator = (Vertex && moveMe){
+	minWeight = moveMe.minWeight;
+	previous = moveMe.previous;
+	myNode = moveMe.myNode;
+	moveMe.myNode = nullptr;
+	adjacent_list = std::move(moveMe.adjacent_list);
+	return *this;
+}
+
 Graph::Graph () : numVertices(0), numEdges(0) { }
 
-//read Graph from file
+//read and initialize graph from a file
 void Graph::init_graph (std::string filename) {
 	std::ifstream input(filename.c_str());
 	if (!input.is_open()) {
@@ -12,22 +30,30 @@ void Graph::init_graph (std::string filename) {
 	input >> numVertices;
 	input >> numEdges;
 	vertex_table.reserve(numVertices);
-
-	int verID;
+	// initialize vertex table
+	for(int i = 0; i < numVertices; ++i) {
+		vertex_table.push_back(std::move(Vertex()));
+	}
+	int verID, adjID, weight;
 	adjacent adj;
-	//init last ID
+	//read graph infomation from the file
 	while (input >> verID) {
 		if (verID >= numVertices) {
 			cerr << "ERROR: Number of vertices exceed the number specified at the beginning of intput file\n";
 			exit(1);
 		}	
-		input >> adj.adjID;
-		input >> adj.weight;
-		vertex_table[verID].adjacent_list.push_back(adj);
-		vertex_table[adj.adjID].adjacent_list.push_back(adj);
+		input >> adjID;
+		input >> weight;
+		//construct adjacent vertex pair
+		adj = std::make_pair(adjID, weight);
+		vertex_table[verID].adjacent_list.push_back(std::move(adj));
+		//construct pair for adjacent vertex 
+		adj = std::make_pair(verID, weight);
+		vertex_table[adjID].adjacent_list.push_back(std::move(adj));
 	}	
 }
 
+//initialize corresponding heap node for vertex i
 void Graph::init_node (int verID, Node *myNode){
 	if (nullptr == myNode) {
 		cerr << "Null pointer exception in init_node\n";
@@ -36,10 +62,12 @@ void Graph::init_node (int verID, Node *myNode){
 	vertex_table[verID].myNode = myNode;
 }
 
+//set previous vertex for vertex i
 void Graph::set_previous(int verID, int previous) {
 	vertex_table[verID].previous = previous;
 }
 
+//get corresponding heap node for vertex i
 Node* Graph::get_node(int verID) {
 	if (nullptr == vertex_table[verID].myNode) {
 		cerr << "Null pointer exception in get_node\n";
@@ -48,17 +76,14 @@ Node* Graph::get_node(int verID) {
 	return vertex_table[verID].myNode;
 }
 
-int Graph::get_num_vertices () {
-	return numVertices;
-}
-
+//print the graph infomation
 void Graph::print() {
  	cout << "vertex number: " << numVertices << endl;
  	cout << "edge number: " << numEdges << endl;
  	for(int i = 0; i < numVertices; ++i){
  		cout << "verID: " << i << endl;
  		for(auto it= vertex_table[i].adjacent_list.begin(); it != vertex_table[i].adjacent_list.end(); ++it) {
- 			cout << "adjID: " << (*it).adjID << "\tweight:" << (*it).weight << endl;
+ 			cout << "adjID: " << (*it).first << "\tweight:" << (*it).second << endl;
  		}
  		cout << endl;
  	}
@@ -76,18 +101,25 @@ void Graph::print() {
 void Graph::shortest_path (int source, int destination) {
 	FibonacciHeap fh;
 	constexpr long infinite = std::numeric_limits<long>::max();
-	for(int i = 0; i < get_num_vertices(); i++){
+	//initialize the corresponding fibonacci heap
+	for(int i = 0; i < numVertices; i++){
 		vertex_table[i].minWeight = infinite;
-		vertex_table[i].previous = i;
+		vertex_table[i].previous = -1;
 		init_node(i, fh.insert(infinite, i));
 	}
+	//decreas the key of source to 0
 	fh.decrease_key(get_node(source), 0);
 	vertex_table[source].minWeight = 0;
 	int minID;
 	while(fh.size() > 0) {
+		//remove minimum element in the heap
 		fh.remove_min(minID);
-		cerr << minID << "\t";
+		//if the min node is destination, break the loop
+		if (destination == minID) {
+			break;
+		}
 		vertex_table[minID].myNode = nullptr;
+		//relax adjacent list of min node
 		relax(fh, minID);
 	}
 
@@ -115,13 +147,15 @@ void Graph::shortest_path (int source, int destination) {
 // 3	v.pai = u
 void Graph::relax (FibonacciHeap &fh, int verID) {
 	for (auto it = vertex_table[verID].adjacent_list.begin(); it != vertex_table[verID].adjacent_list.end(); ++it) {
-		int adjID = it->adjID;
-		int weight = it->weight;
+		int adjID = it->first;
+		int weight = it->second;
 		int newWeight = vertex_table[verID].minWeight + weight;
-
+		//if the new weight less than old weight
 		if (vertex_table[adjID].minWeight > newWeight) {
 			vertex_table[adjID].minWeight = newWeight;
+			//decrease correspond node in the heap
 			fh.decrease_key(get_node(adjID), newWeight);
+			// update previous vertex
 			set_previous(adjID, verID);
 		}
 	}
