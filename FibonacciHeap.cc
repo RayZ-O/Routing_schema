@@ -105,14 +105,25 @@ int FibonacciHeap :: remove_min (int &verID){
 	minNode->rsibling->lsibling = minNode->lsibling;
 	minNode->lsibling->rsibling = minNode->rsibling;
 	if (minNode->rsibling == minNode) {
+		destroy_min();
 		minNode = nullptr;
 	} else {
-		minNode = minNode->rsibling;
+		Node *temp = minNode->rsibling;
+		destroy_min();
+		minNode = temp;
 		pairwise_combine();
 	}	
 	--numItem;
 	//print();
 	return item;
+}
+
+void FibonacciHeap :: destroy_min() {
+	minNode->parent = nullptr;
+	minNode->child = nullptr;
+	minNode->lsibling = nullptr;
+	minNode->rsibling = nullptr;
+	delete minNode;
 }
 
 void FibonacciHeap :: remove (Node *rmMe){

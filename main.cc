@@ -14,7 +14,8 @@ int main (int argc, char *argv[]) {
 
 	// G.init_graph(filename);
 	// G.shortest_path(source, destination);
-	G.init_graph("input_1000_50_part1.txt");
-	// G.init_graph("sample_input_part1.txt");
-	G.shortest_path(0, 999);
+	//G.init_graph("input_1000_50_part1.txt");
+	G.init_graph("sample_input_part1.txt");
+	// G.shortest_path(0, 999);
+	G.shortest_path(0, 4);
 }
