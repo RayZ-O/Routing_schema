@@ -39,8 +39,8 @@ private:
 	void meld_list (Node *firstListNode, Node *secondListNode);
 	void cut_subtree (Node *rootIn);
 	void cascading_cut (Node *beginNode);
-	void find_next_min();
-	Node* join_min_trees (Node * root1, Node * root2);
+	void exchange(Node **x, Node **y);
+	void combine_trees (Node *y, Node *x);
 	void pairwise_combine ();
 	
 public:

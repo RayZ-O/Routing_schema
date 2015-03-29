@@ -85,40 +85,33 @@ void FibonacciHeap :: meld (FibonacciHeap &heap){
 // Update binomial heap pointer
 int FibonacciHeap :: remove_min (int &verID){
 	if (minNode == nullptr) {
-		return 0;
+		cerr << "ERROR: Remove from empty heap\n";
+		exit(1);
 	}
 	verID = minNode->verID;
 	int item = minNode->data;
-	//if the min node does not have children
-	if (nullptr == minNode->child) {
-		//if min node is the only node in the heap
-		if (minNode->rsibling == minNode) {
-			delete minNode;	
-			minNode = nullptr;
-			--numItem;
-			return item;
-		} else {
-			find_next_min();
-		}		
-	} 
-	else {
-		Node *childptr = minNode->child;
-		//set all children's parent field to nullptr and childCut field to false
-		do {
-			childptr->parent = nullptr;
-			childptr->childCut = false;
-			childptr = childptr->rsibling;
-		} while (childptr != minNode->child);
-		//take out min node and meld the children list into the top doubly linked list
-		meld_list(childptr, minNode);
-		//find the new min node
-		find_next_min();
-	}	
 
-	// pairwise combine trees in heap and update heap pointer
-	pairwise_combine();
+	if (minNode->child != nullptr) {
+		Node *c = minNode->child;
+		//set all children's parent field to nullptr and childCut field to false
+		for (int i = 0; i < minNode->degree; ++i) {
+			c->parent = nullptr;
+			c->childCut = false;
+			c = c->rsibling;
+		}
+		meld_list(c, minNode);
+	}
+
+	minNode->rsibling->lsibling = minNode->lsibling;
+	minNode->lsibling->rsibling = minNode->rsibling;
+	if (minNode->rsibling == minNode) {
+		minNode = nullptr;
+	} else {
+		minNode = minNode->rsibling;
+		pairwise_combine();
+	}	
 	--numItem;
-	print();
+	//print();
 	return item;
 }
 
@@ -221,23 +214,7 @@ void FibonacciHeap :: meld_list (Node *firstListNode, Node *secondListNode) {
 	secondListNode->lsibling = firstListNode;
 }
 
-void FibonacciHeap :: find_next_min() {
-	minNode->rsibling->lsibling = minNode->lsibling;
-	minNode->lsibling->rsibling = minNode->rsibling;
-	Node *iter = minNode->rsibling;
-	Node *min = iter;
-	do {
-		if(iter->data < min->data){
-			min = iter;
-		}
-		iter = iter->rsibling;
-	} while(iter != minNode->rsibling);
-	delete minNode;	
-	minNode = min;
-}
-
 //cut the subtree rooted in rootIn
-
 void FibonacciHeap :: cut_subtree(Node *rootIn){
 	Node *p = rootIn->parent;
 	//decrement degree
@@ -274,53 +251,25 @@ void FibonacciHeap :: cascading_cut(Node *curNode){
 	}
 }
 
-//join two min tree when performing remove min
-Node* FibonacciHeap :: join_min_trees(Node* root1, Node* root2){
-	if (nullptr == root1 || nullptr == root2) {
-		cerr << "ERROR: Join non-exist min tree in Pairwise Combine\n";
-		exit(1);
-	}
-
-	//root1 will be the new root
-	if (root1->data < root2->data) {
-		//root1 become root2's parent
-		root2->parent = root1;
-		list_remove(root2);
-		//insert root2 into root1's children list
-		if (root1->degree != 0) {
-			meld_list(root2, root1->child);
-		} else {
-			//root2 become root1's first child
-			root1->child = root2;
-			root2->lsibling = root2;
-			root2->rsibling = root2;			
-		}			
-		//increment degree of root1
-		root1->degree += 1;
-		root2->childCut = false;
-		return root1;
-	} 
-	//root2 will be the new root
-	else {
-		list_remove(root1);
-		//root2 become root1's parent
-		root1->parent = root2;
-		//insert root1 into root2's children list
-		if (root2->degree != 0) {
-			meld_list(root1, root2->child);
-		} else {
-			//root1 become root2's first child
-			root2->child = root1;
-			root1->lsibling = root1;
-			root1->rsibling = root1;			
-		}		
-		//increment degree of root2
-		root2->degree += 1;
-		root2->childCut = false;
-		return root2;
-	}
+void FibonacciHeap :: exchange(Node **x, Node **y) {
+	Node *temp;
+	temp = *x;
+	*x = *y;
+	*y = temp;
 }
 
+
+void FibonacciHeap :: combine_trees (Node *y, Node *x) {
+	list_remove(y);
+	if (nullptr == x->child) {
+		x->child = y;
+	} else {
+		meld_list(y, x->child);
+	}
+	y->parent = x;
+	x->degree += 1;
+	y->childCut = false;
+}
 
 void FibonacciHeap :: pairwise_combine(){
 	//compute golden ratio
@@ -333,24 +282,38 @@ void FibonacciHeap :: pairwise_combine(){
 	for(int i = 0; i < max_degree; i++) {
 		tree[i] = nullptr;
 	}
+
+	Node *x = minNode;
 	//traverse all trees in the heap
-	Node *p = minNode;
-	int degree;
 	do {
-		//if there are two trees with the same degree in the heap
-		for (degree = p->degree; tree[degree] != nullptr; degree++) {
-			if(degree >= max_degree){
-				cerr << "ERROR: degree larger than max degree\n";
-				cerr << "max_degree: " << max_degree << "  actual degree" << degree << "\n";
-				exit(1);
+		Node *next = x->rsibling;
+		int d = x->degree;
+		while (tree[d] != nullptr) {
+			Node *y = tree[d];
+			if (x->data > y->data) {
+				exchange(&x, &y);
 			}
-			//join two trees
-			p = join_min_trees(p, tree[degree]);
-			//update tree table
-			tree[degree] = nullptr;
+			combine_trees(y, x);
+			tree[d] = nullptr;
+			++d;
 		}
-		tree[degree] = p;
-		p = p->rsibling;	
-	} while (p != minNode);
+		tree[d] = x;
+		x = next;
+	} while(x != minNode);
+	minNode = nullptr;
+	for (int i = 0; i < max_degree; ++i) {
+		if (tree[i] != nullptr) {
+			if (nullptr == minNode) {
+				minNode = tree[i];
+				minNode->lsibling = minNode;
+				minNode->rsibling = minNode;
+			} else {
+				meld_list(tree[i], minNode);
+				if (tree[i]->data < minNode->data) {
+					minNode = tree[i];
+				}
+			}
+		}
+	}
 }
 
