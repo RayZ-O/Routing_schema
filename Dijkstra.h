@@ -5,6 +5,7 @@
 #include <string>
 #include <fstream>
 #include <algorithm>
+#include <stack>
 
 typedef std::pair<int, int> adjacent;
 
@@ -46,10 +47,12 @@ public:
 	Node* get_node(int i);
 	//print the graph infomation
 	void print();
-	//find and print shoertest path
+	//find shoertest path using Dijkstra's algorithm
 	void shortest_path (int source, int destination);
 	//relax an edge in Dijkstra's algorithm
 	void relax (FibonacciHeap &fh, int verID);	
+	//print shoertest path and minimum weight
+	void print_path(int source, int destination);
 };
 
 

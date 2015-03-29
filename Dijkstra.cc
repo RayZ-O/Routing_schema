@@ -29,6 +29,10 @@ void Graph::init_graph (std::string filename) {
 	}
 	input >> numVertices;
 	input >> numEdges;
+	if (numVertices <= 0 && numEdges <0) {
+		cerr << "ERROR: Invalid input file!\n";
+		exit(1);
+	}
 	vertex_table.reserve(numVertices);
 	// initialize vertex table
 	for(int i = 0; i < numVertices; ++i) {
@@ -37,13 +41,13 @@ void Graph::init_graph (std::string filename) {
 	int verID, adjID, weight;
 	adjacent adj;
 	//read graph infomation from the file
-	while (input >> verID) {
-		if (verID >= numVertices) {
-			cerr << "ERROR: Number of vertices exceed the number specified at the beginning of intput file\n";
-			exit(1);
-		}	
+	while (input >> verID) {		
 		input >> adjID;
 		input >> weight;
+		if (verID < 0 || verID >= numVertices || adjID < 0 || adjID >= numVertices || weight < 0) {
+			cerr << "ERROR: Invalid input file!\n";
+			exit(1);
+		}	
 		//construct adjacent vertex pair
 		adj = std::make_pair(adjID, weight);
 		vertex_table[verID].adjacent_list.push_back(std::move(adj));
@@ -99,13 +103,21 @@ void Graph::print() {
 // 7	for each vertex v in G.Adj[u]
 // 8		RELAX(u, v, w)
 void Graph::shortest_path (int source, int destination) {
+	//if the source or destination is not in the gragh
+	if (source < 0 || source >= numVertices) {
+		cerr << "Please input valid source\n" << "valid vertex range: [0-" << numVertices-1 << "]  input: " << source <<"\n";		
+		exit(1);
+	} else if (destination < 0 || destination >= numVertices) {
+		cerr << "Please input valid destination\n" << "valid vertex range: [0-" << numVertices-1 << "]  input: " << destination <<"\n";
+		exit(1);
+	}
 	FibonacciHeap fh;
-	constexpr long infinite = std::numeric_limits<long>::max();
+	constexpr long infinity = std::numeric_limits<long>::max();
 	//initialize the corresponding fibonacci heap
 	for(int i = 0; i < numVertices; i++){
-		vertex_table[i].minWeight = infinite;
+		vertex_table[i].minWeight = infinity;
 		vertex_table[i].previous = -1;
-		init_node(i, fh.insert(infinite, i));
+		init_node(i, fh.insert(infinity, i));
 	}
 	//decreas the key of source to 0
 	fh.decrease_key(get_node(source), 0);
@@ -121,23 +133,8 @@ void Graph::shortest_path (int source, int destination) {
 		vertex_table[minID].myNode = nullptr;
 		//relax adjacent list of min node
 		relax(fh, minID);
-	}
-
-	cout << "Minimum weight is " << vertex_table[destination].minWeight << endl;
-	std::vector<int> path;
-	path.reserve(numVertices);
-	int p = destination;
-	do {		
-		path.push_back(p);
-		p = vertex_table[p].previous;
-	} while (p != source);
-	path.push_back(source);
-	std::reverse(path.begin(), path.end());
-	cout << "Shortest path is \n";
-	for(auto it = path.begin(); it != path.end(); ++it){
-		cout << *it << " ";
-	}
-	cout << endl;
+	}	
+	print_path(source, destination);
 }
 	
 
@@ -149,7 +146,7 @@ void Graph::relax (FibonacciHeap &fh, int verID) {
 	for (auto it = vertex_table[verID].adjacent_list.begin(); it != vertex_table[verID].adjacent_list.end(); ++it) {
 		int adjID = it->first;
 		int weight = it->second;
-		int newWeight = vertex_table[verID].minWeight + weight;
+		long newWeight = vertex_table[verID].minWeight + weight;
 		//if the new weight less than old weight
 		if (vertex_table[adjID].minWeight > newWeight) {
 			vertex_table[adjID].minWeight = newWeight;
@@ -159,4 +156,29 @@ void Graph::relax (FibonacciHeap &fh, int verID) {
 			set_previous(adjID, verID);
 		}
 	}
+}
+
+void Graph::print_path(int source, int destination) {
+	constexpr long infinity = std::numeric_limits<long>::max();
+	// if the minimum weight is infinity
+	if (infinity == vertex_table[destination].minWeight) {
+		cout << "There's no path between vertex " << source << " and vertex " << destination << endl;
+	} else {
+		//print minimum weight 
+		cout << vertex_table[destination].minWeight << endl;
+		std::stack<int> path;
+		//push the path into a stack
+		int p = destination;
+		do {		
+			path.push(p);
+			p = vertex_table[p].previous;
+		} while (p != source);
+		path.push(source);
+		//pop and print each vertex on the path
+		while (!path.empty()) {
+			cout << path.top() << " ";
+			path.pop();
+		}
+		cout << "\n";
+	}	
 }
