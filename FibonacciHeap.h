@@ -25,15 +25,12 @@ struct node	{
 	Node *rsibling;
 
 	node () : data (0), verID(-1), degree (0), childCut(false), parent (nullptr), child (nullptr), lsibling (nullptr), rsibling(nullptr) {}	
-	~node () {
-	}
 };
 
 class FibonacciHeap {
 private:	
 	Node *minNode;
 	int numItem;
-	void destroy_min();
 	void list_remove(Node *eraseMe);
 	void meld_list (Node *firstListNode, Node *secondListNode);
 	void cut_subtree (Node *rootIn);

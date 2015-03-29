@@ -6,7 +6,10 @@
 #include <fstream>
 #include <algorithm>
 
-typedef std::pair<int, int> adjacent;
+typedef struct _adjacent {
+	int adjID;
+	int weight;
+}adjacent;
 
 typedef struct vertex {
 	std::vector<adjacent> adjacent_list;

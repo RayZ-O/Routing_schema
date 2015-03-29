@@ -13,7 +13,7 @@ void Graph::init_graph (std::string filename) {
 	input >> numEdges;
 	vertex_table.reserve(numVertices);
 
-	int verID, adjID, weight;
+	int verID;
 	adjacent adj;
 	//init last ID
 	while (input >> verID) {
@@ -21,12 +21,10 @@ void Graph::init_graph (std::string filename) {
 			cerr << "ERROR: Number of vertices exceed the number specified at the beginning of intput file\n";
 			exit(1);
 		}	
-		input >> adjID;
-		input >> weight;
-		adj = std::make_pair(adjID, weight);
+		input >> adj.adjID;
+		input >> adj.weight;
 		vertex_table[verID].adjacent_list.push_back(adj);
-		adj = std::make_pair(verID, weight);
-		vertex_table[adjID].adjacent_list.push_back(adj);
+		vertex_table[adj.adjID].adjacent_list.push_back(adj);
 	}	
 }
 
@@ -60,7 +58,7 @@ void Graph::print() {
  	for(int i = 0; i < numVertices; ++i){
  		cout << "verID: " << i << endl;
  		for(auto it= vertex_table[i].adjacent_list.begin(); it != vertex_table[i].adjacent_list.end(); ++it) {
- 			cout << "adjID: " << (*it).first << "\tweight:" << (*it).second << endl;
+ 			cout << "adjID: " << (*it).adjID << "\tweight:" << (*it).weight << endl;
  		}
  		cout << endl;
  	}
@@ -117,8 +115,8 @@ void Graph::shortest_path (int source, int destination) {
 // 3	v.pai = u
 void Graph::relax (FibonacciHeap &fh, int verID) {
 	for (auto it = vertex_table[verID].adjacent_list.begin(); it != vertex_table[verID].adjacent_list.end(); ++it) {
-		int adjID = it->first;
-		int weight = it->second;
+		int adjID = it->adjID;
+		int weight = it->weight;
 		int newWeight = vertex_table[verID].minWeight + weight;
 
 		if (vertex_table[adjID].minWeight > newWeight) {

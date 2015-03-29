@@ -105,25 +105,17 @@ int FibonacciHeap :: remove_min (int &verID){
 	minNode->rsibling->lsibling = minNode->lsibling;
 	minNode->lsibling->rsibling = minNode->rsibling;
 	if (minNode->rsibling == minNode) {
-		destroy_min();
+		delete minNode;
 		minNode = nullptr;
 	} else {
 		Node *temp = minNode->rsibling;
-		destroy_min();
+		delete minNode;
 		minNode = temp;
 		pairwise_combine();
 	}	
 	--numItem;
 	//print();
 	return item;
-}
-
-void FibonacciHeap :: destroy_min() {
-	minNode->parent = nullptr;
-	minNode->child = nullptr;
-	minNode->lsibling = nullptr;
-	minNode->rsibling = nullptr;
-	delete minNode;
 }
 
 void FibonacciHeap :: remove (Node *rmMe){
@@ -192,6 +184,7 @@ void FibonacciHeap :: decrease_key (Node *decMe, long newData){
 	if (decMe->data < minNode->data) {
 		minNode = decMe;
 	}
+//	cout << decMe->degree <<" ";
 }
 
 int FibonacciHeap :: size () {
@@ -236,13 +229,17 @@ void FibonacciHeap :: cut_subtree(Node *rootIn){
 	//if rootIn's parent have no more children
 	else if (0 == p->degree) {
 		p->child = nullptr;
+	} 
+	if (0 >p->degree){
+		cerr << "degree less than 0\n";
+		exit(1);
 	}
 	//take rootIn out from sibling list
 	list_remove(rootIn);
 	//meld the cut tree into top list
 	meld_list(rootIn, minNode);	
 	//update parent and childcut
-	p = nullptr;
+	rootIn->parent = nullptr;
 	//rootIn go into top list, set childcut to false
 	rootIn->childCut = false;
 }
@@ -293,11 +290,15 @@ void FibonacciHeap :: pairwise_combine(){
 	for(int i = 0; i < max_degree; i++) {
 		tree[i] = nullptr;
 	}
-
+	std::vector<Node*> nodes;
 	Node *x = minNode;
-	//traverse all trees in the heap
 	do {
-		Node *next = x->rsibling;
+		nodes.push_back(x);
+		x = x->rsibling;
+	} while (x != minNode);
+	//traverse all trees in the heap
+	for (auto it = nodes.begin(); it != nodes.end(); ++it) {
+		x = *it;
 		int d = x->degree;
 		while (tree[d] != nullptr) {
 			Node *y = tree[d];
@@ -309,8 +310,7 @@ void FibonacciHeap :: pairwise_combine(){
 			++d;
 		}
 		tree[d] = x;
-		x = next;
-	} while(x != minNode);
+	} 
 	minNode = nullptr;
 	for (int i = 0; i < max_degree; ++i) {
 		if (tree[i] != nullptr) {
@@ -318,7 +318,9 @@ void FibonacciHeap :: pairwise_combine(){
 				minNode = tree[i];
 				minNode->lsibling = minNode;
 				minNode->rsibling = minNode;
-			} else {
+			} else {				
+				tree[i]->lsibling = tree[i];
+				tree[i]->rsibling = tree[i];
 				meld_list(tree[i], minNode);
 				if (tree[i]->data < minNode->data) {
 					minNode = tree[i];
