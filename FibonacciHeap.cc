@@ -7,38 +7,12 @@ FibonacciHeap :: FibonacciHeap() : minNode(nullptr), numItem(0) { }
 
 
 FibonacciHeap :: ~FibonacciHeap (){
-	//similar to remove min except pairwise combine
-	while (size() > 0) {
-		if (minNode->child != nullptr) {
-			Node *c = minNode->child;
-			//set all children's parent field to nullptr and childCut field to false
-			for (int i = 0; i < minNode->degree; ++i) {
-				c->parent = nullptr;
-				c = c->rsibling;
-			}
-			minNode->child = nullptr;
-			minNode->degree = 0;
-			meld_list(c, minNode);
-		}
-		minNode->rsibling->lsibling = minNode->lsibling;
-		minNode->lsibling->rsibling = minNode->rsibling;
-		if (minNode->rsibling == minNode) {
-			delete minNode;
-			minNode = nullptr;
-		} else {
-			Node *temp = minNode->rsibling;
-			minNode->rsibling = nullptr;
-			minNode->lsibling = nullptr;
-			delete minNode;
-			minNode = temp;
-		}	
-		--numItem;
-	}
+	delete minNode;
 }
 
 // Add a new single-node min tree to the collection
 // Update min-element pointer if necessary
-Node* FibonacciHeap :: insert (long item, int verID){
+Node* FibonacciHeap :: insert (long item, long verID){
 	Node *temp = new (std::nothrow) Node;
 	if (nullptr == temp) {
 		cerr << "ERROR : Not enough memory. EXIT !!!\n";
@@ -98,14 +72,14 @@ void FibonacciHeap :: meld (FibonacciHeap &heap){
 // Remove a min tree
 // Reinsert subtrees of removed min tree
 // Update binomial heap pointer
-int FibonacciHeap :: remove_min (int &verID){
+long FibonacciHeap :: remove_min (long &verID){
 	if (minNode == nullptr) {
 		cerr << "ERROR: Remove from empty heap\n";
 		exit(1);
 	}
 	//get corresponding vertex ID in the graph
 	verID = minNode->verID;
-	int item = minNode->data;
+	long item = minNode->data;
 	//if minNode has children
 	if (minNode->child != nullptr) {
 		Node *c = minNode->child;
@@ -152,7 +126,7 @@ void FibonacciHeap :: remove (Node *rmMe){
 	constexpr long infinite = std::numeric_limits<long>::max();
 	//decrease key of rmMe to minus infinite
 	decrease_key(rmMe, -infinite);
-	int dummy;
+	long dummy;
 	remove_min(dummy);
 }
 

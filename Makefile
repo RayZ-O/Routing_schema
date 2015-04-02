@@ -1,17 +1,22 @@
 CC=g++ -g -std=c++11 -Wall
+SOURE=src
 
-ssp: main.o FibonacciHeap.o Dijkstra.o
-	$(CC) -o ssp main.o FibonacciHeap.o Dijkstra.o
+routing: main.o FibonacciHeap.o Dijkstra.o Trie.o
+	$(CC) -o routing  main.o FibonacciHeap.o Dijkstra.o Trie.o
 
-main.o: main.cc
-	$(CC) -c main.cc -o main.o
+main.o: $(SOURE)/main.cc
+	$(CC) -c $(SOURE)/main.cc -o main.o
 
-Dijkstra.o: Dijkstra.cc
-	$(CC) -c Dijkstra.cc -o Dijkstra.o
+Dijkstra.o: $(SOURE)/Dijkstra.cc
+	$(CC) -c $(SOURE)/Dijkstra.cc -o Dijkstra.o
 
-FibonacciHeap.o: FibonacciHeap.cc
-	$(CC) -c FibonacciHeap.cc -o FibonacciHeap.o
+Trie.o: $(SOURE)/Trie.cc
+	$(CC) -c $(SOURE)/Trie.cc -o Trie.o
+
+FibonacciHeap.o: $(SOURE)/FibonacciHeap.cc
+	$(CC) -c $(SOURE)/FibonacciHeap.cc -o FibonacciHeap.o
 
 clean: 
-	rm -f ssp
+	rm -f routing
 	rm -f *.o
+	rm -f *~

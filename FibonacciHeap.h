@@ -17,7 +17,7 @@ class Node	{
 friend class FibonacciHeap;
 private:
 	long data;
-	int verID;
+	long verID;
 	int degree;
 	bool childCut;
 	Node *parent;
@@ -28,6 +28,16 @@ private:
 	//delete default copy constructor and copy assignment
 	Node (const Node &copyMe) = delete;
 	Node & operator = (const Node &copyMe) = delete; 
+	~Node() {
+		if (child != nullptr) {
+			delete child;
+			child = nullptr;
+		} else if (rsibling != nullptr) {
+			lsibling->rsibling = nullptr;
+			delete rsibling;
+			rsibling = nullptr;
+		}
+	}
 };
 
 class FibonacciHeap {
@@ -56,9 +66,9 @@ public:
 	FibonacciHeap (const FibonacciHeap &copyMe) = delete;
 	FibonacciHeap & operator = (const FibonacciHeap &copyMe) = delete;
 	// insert node into the heap and set corresponding vertex ID
-	Node* insert (long item, int verID);
+	Node* insert (long item, long verID);
 	// remove min element in the heap
-	int remove_min (int &verID);
+	long remove_min (long &verID);
 	// remove arbitrary node
 	void remove (Node *removeMe);
 	// meld heap
