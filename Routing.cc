@@ -247,11 +247,14 @@ void Graph::print_prefix_path(long source, long destination) {
 			path.pop();
 			s = path.top();
 			// post order traversal and get prefix match
-			trie.get_prefix(ip_table[s], s, pf);
-			for(auto it = pf.begin(); it != pf.end(); ++it) {
-				cout << *it;
-			}
-			cout << "*_" << s << "\n";//" ";
+			if (0 != trie.get_prefix(ip_table[s], s, pf)){
+				cerr << "Not in Trie";
+			} else {
+				for(auto it = pf.begin(); it != pf.end(); ++it) {
+					cout << *it;
+				}
+			}			
+			cout << "_" << s << "\n";//" ";
 			trie.clear();
 			pf.clear();
 			// perform shortest path for next-hop
