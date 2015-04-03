@@ -1,5 +1,5 @@
-#ifndef _DIJKSTRA_H
-#define _DIJKSTRA_H
+#ifndef _ROUTING_H
+#define _ROUTING_H
 
 #include "FibonacciHeap.h"
 #include "Trie.h"
@@ -52,11 +52,15 @@ public:
 	//print the graph infomation
 	void print();
 	//find shoertest path using Dijkstra's algorithm
-	void shortest_path (long source, long destination);
+	void shortest_path (long source);
 	//relax an edge in Dijkstra's algorithm
 	void relax (FibonacciHeap &fh, long verID);	
+	// push the path into a stack
+	int get_path(long source, long destination, std::stack<long> &path);
 	//print shoertest path and minimum weight
 	void print_path(long source, long destination);
+	//print minimum weight, shoertest path with matched prefix
+	void print_prefix_path(long source, long destination);
 };
 
 

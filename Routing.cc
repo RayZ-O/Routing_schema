@@ -1,4 +1,4 @@
-#include "Dijkstra.h"
+#include "Routing.h"
 
 Vertex::Vertex() : minWeight(-1), previous(-1), myNode(nullptr) { }
 
@@ -66,9 +66,9 @@ void Graph::init_graph (std::string filename1, std::string filename2) {
 		ip_table.push_back(temp);
 	}
 
-	for(int i = 0; i<numVertices; ++i) {
-		cout << ip_table[i] << endl;
-	}
+	// for(int i = 0; i<numVertices; ++i) {
+	// 	cout << ip_table[i] << endl;
+	// }
 }
 
 void Graph::ip_to_bit(const std::string ip, IpAddr &bits) {
@@ -129,15 +129,7 @@ void Graph::print() {
 // 6	S = S U {u}
 // 7	for each vertex v in G.Adj[u]
 // 8		RELAX(u, v, w)
-void Graph::shortest_path (long source, long destination) {
-	//if the source or destination is not in the gragh
-	if (source < 0 || source >= numVertices) {
-		cerr << "Please input valid source\n" << "valid vertex range: [0-" << numVertices-1 << "]  input: " << source <<"\n";		
-		exit(1);
-	} else if (destination < 0 || destination >= numVertices) {
-		cerr << "Please input valid destination\n" << "valid vertex range: [0-" << numVertices-1 << "]  input: " << destination <<"\n";
-		exit(1);
-	}
+void Graph::shortest_path (long source) {
 	FibonacciHeap fh;
 	constexpr long infinity = std::numeric_limits<long>::max();
 	//initialize the corresponding fibonacci heap
@@ -153,17 +145,11 @@ void Graph::shortest_path (long source, long destination) {
 	while(fh.size() > 0) {
 		//remove minimum element in the heap
 		fh.remove_min(minID);
-		//if the min node is destination, break the loop
-		if (destination == minID) {
-			break;
-		}
 		vertex_table[minID].myNode = nullptr;
 		//relax adjacent list of min node
 		relax(fh, minID);
 	}	
-	print_path(source, destination);
-}
-	
+}	
 
 // RELAX(u, v, w)
 // 1 if v.d > u.d + w(u, v)
@@ -185,15 +171,13 @@ void Graph::relax (FibonacciHeap &fh, long verID) {
 	}
 }
 
-void Graph::print_path(long source, long destination) {
+int Graph::get_path(long source, long destination, std::stack<long> &path) {
 	constexpr long infinity = std::numeric_limits<long>::max();
 	// if the minimum weight is infinity
 	if (infinity == vertex_table[destination].minWeight) {
-		cout << "There's no path between vertex " << source << " and vertex " << destination << endl;
+		return 1;
 	} else {
 		//print minimum weight 
-		cout << vertex_table[destination].minWeight << endl;
-		std::stack<long> path;
 		//push the path into a stack
 		long p = destination;
 		do {		
@@ -201,11 +185,77 @@ void Graph::print_path(long source, long destination) {
 			p = vertex_table[p].previous;
 		} while (p != source);
 		path.push(source);
+		return 0;
+	}
+}
+
+
+void Graph::print_path(long source, long destination) {
+	std::stack<long> path;
+	// if the minimum weight is infinity
+	if (get_path(source, destination, path)) {
+		cout << "There's no path between vertex " << source << " and vertex " << destination << endl;
+	} else {
+		//print minimum weight 
+		cout << vertex_table[destination].minWeight << endl;		
 		//pop and print each vertex on the path
 		while (!path.empty()) {
 			cout << path.top() << " ";
 			path.pop();
 		}
 		cout << "\n";
+	}	
+}
+
+void Graph::print_prefix_path(long source, long destination) {
+	//if the source or destination is not in the gragh
+	if (source < 0 || source >= numVertices) {
+		cerr << "Please input valid source\n" << "valid vertex range: [0-" << numVertices-1 << "]  input: " << source <<"\n";		
+		exit(1);
+	} else if (destination < 0 || destination >= numVertices) {
+		cerr << "Please input valid destination\n" << "valid vertex range: [0-" << numVertices-1 << "]  input: " << destination <<"\n";
+		exit(1);
+	}
+	std::stack<long> path;
+	Prefix pf;
+	shortest_path (source);
+	print_path(source, destination);
+	if (get_path(source, destination, path)) {
+		cout << "There's no path between vertex " << source << " and vertex " << destination << endl;
+	} else {
+		//print minimum weight 
+		cout << vertex_table[destination].minWeight << endl;
+		long s = path.top();
+		while (destination != s) {
+			std::stack<long> temp;
+			BinaryTrie trie;
+			// for each destination, examine the shortest path 
+			for (int i = 0; i < numVertices; ++i) {				
+				get_path(s, i, temp);
+				// get next hop on the shortest path
+				temp.pop();
+				long verID = temp.top();
+				DataPair dp = std::make_pair(ip_table[verID], verID);
+				//insert the next-hop with its ip into binary trie
+				trie.insert(dp);
+				// trick to clear stack
+				{
+					std::stack<long> swapper;
+					temp.swap(swapper);
+				}
+			}			
+			path.pop();
+			s = path.top();
+			// post order traversal and get prefix match
+			trie.get_prefix(ip_table[s], s, pf);
+			for(auto it = pf.begin(); it != pf.end(); ++it) {
+				cout << *it;
+			}
+			cout << "*_" << s << "\n";//" ";
+			trie.clear();
+			pf.clear();
+			// perform shortest path for next-hop
+			shortest_path (s);
+		}
 	}	
 }
