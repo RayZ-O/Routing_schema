@@ -15,6 +15,8 @@ using std::endl;
 #define BITWIDTH 32
 #define LEFT 0
 #define RIGHT 1
+#define SUCCESS 0
+#define FAILED -1
 
 typedef std::vector<bool> Prefix;
 typedef std::bitset<BITWIDTH> IpAddr;
@@ -31,7 +33,9 @@ struct TNode {
 	TNode& operator = (const TNode &copyMe) = delete;
 	~TNode() {
 		delete lchild;
+		lchild = nullptr;
 		delete rchild;
+		rchild = nullptr;
 	}
 };
 

@@ -34,11 +34,8 @@ void Graph::init_graph (std::string filename1, std::string filename2) {
 		cerr << "ERROR: Invalid input file!\n";
 		exit(1);
 	}
-	vertex_table.reserve(numVertices);
 	// initialize vertex table
-	for(int i = 0; i < numVertices; ++i) {
-		vertex_table.push_back(std::move(Vertex()));
-	}
+	vertex_table.resize(numVertices);
 	long verID, adjID;
 	int weight;
 	adjacent adj;
@@ -65,10 +62,6 @@ void Graph::init_graph (std::string filename1, std::string filename2) {
 		ip_to_bit(ipstr, temp);
 		ip_table.push_back(temp);
 	}
-
-	// for(int i = 0; i<numVertices; ++i) {
-	// 	cout << ip_table[i] << endl;
-	// }
 }
 
 void Graph::ip_to_bit(const std::string ip, IpAddr &bits) {
@@ -113,8 +106,8 @@ void Graph::print() {
  	cout << "edge number: " << numEdges << endl;
  	for(int i = 0; i < numVertices; ++i){
  		cout << "verID: " << i << endl;
- 		for(auto it= vertex_table[i].adjacent_list.begin(); it != vertex_table[i].adjacent_list.end(); ++it) {
- 			cout << "adjID: " << (*it).first << "\tweight:" << (*it).second << endl;
+ 		for(auto ver : vertex_table[i].adjacent_list) {
+ 			cout << "adjID: " << ver.first << "\tweight:" << ver.second << endl;
  		}
  		cout << endl;
  	}
@@ -183,7 +176,10 @@ int Graph::get_path(long source, long destination, std::stack<long> &path) {
 		do {		
 			path.push(p);
 			p = vertex_table[p].previous;
-		} while (p != source);
+		} while (p != source && p != -1);
+		if (-1 == p) {
+			return 1;
+		}
 		path.push(source);
 		return 0;
 	}
@@ -216,12 +212,11 @@ void Graph::print_prefix_path(long source, long destination) {
 		cerr << "Please input valid destination\n" << "valid vertex range: [0-" << numVertices-1 << "]  input: " << destination <<"\n";
 		exit(1);
 	}
-	std::stack<long> path;
-	Prefix pf;
+	std::stack<long> path;	
 	shortest_path (source);
-	print_path(source, destination);
 	if (get_path(source, destination, path)) {
-		cout << "There's no path between vertex " << source << " and vertex " << destination << endl;
+		// cout << "There's no path between vertex " << source << " and vertex " << destination << endl;
+		return;
 	} else {
 		//print minimum weight 
 		cout << vertex_table[destination].minWeight << endl;
@@ -231,30 +226,30 @@ void Graph::print_prefix_path(long source, long destination) {
 			BinaryTrie trie;
 			// for each destination, examine the shortest path 
 			for (int i = 0; i < numVertices; ++i) {				
-				get_path(s, i, temp);
+				if (get_path(s, i, temp) && s == i) {
+					continue;
+				}
 				// get next hop on the shortest path
 				temp.pop();
 				long verID = temp.top();
-				DataPair dp = std::make_pair(ip_table[verID], verID);
+				DataPair dp = std::make_pair(ip_table[i], verID);
 				//insert the next-hop with its ip into binary trie
 				trie.insert(dp);
 				// trick to clear stack
-				{
-					std::stack<long> swapper;
-					temp.swap(swapper);
-				}
+				clear_stack(temp);
 			}			
 			path.pop();
 			s = path.top();
+			Prefix pf;
 			// post order traversal and get prefix match
-			if (0 != trie.get_prefix(ip_table[s], s, pf)){
+			if (0 != trie.get_prefix(ip_table[destination], destination, pf)){
 				cerr << "Not in Trie";
 			} else {
-				for(auto it = pf.begin(); it != pf.end(); ++it) {
-					cout << *it;
+				for(auto bit : pf) {
+					cout << bit;
 				}
 			}			
-			cout << "_" << s << "\n";//" ";
+			cout << "_" << s << " ";
 			trie.clear();
 			pf.clear();
 			// perform shortest path for next-hop
@@ -262,3 +257,9 @@ void Graph::print_prefix_path(long source, long destination) {
 		}
 	}	
 }
+
+void Graph::clear_stack(std::stack<long> &s) {
+	std::stack<long> empty;
+	s.swap(empty);
+}
+

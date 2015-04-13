@@ -266,8 +266,8 @@ void FibonacciHeap :: pairwise_combine(){
 		x = x->rsibling;
 	} while (x != minNode);
 	//traverse all trees in the heap
-	for (auto it = nodes.begin(); it != nodes.end(); ++it) {
-		x = *it;
+	for (auto root : nodes) {
+		x = root;
 		int d = x->degree;
 		// x's degree appears in tree table
 		while (tree[d] != nullptr) {

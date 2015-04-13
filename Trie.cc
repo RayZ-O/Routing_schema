@@ -12,7 +12,7 @@ void BinaryTrie::insert (DataPair &data) {
 	TNode *x = root;
 	
 	// if the trie is empty, add the element as new root
-	if (nullptr == x) {
+	if (!x) {
 		root = temp;
 		return;
 	} 
@@ -24,7 +24,7 @@ void BinaryTrie::insert (DataPair &data) {
 		y = x;
 		if (temp->data.first[pos]) {
 			// if current branch node has no right child
-			if (nullptr == x->rchild) {
+			if (!x->rchild) {
 				temp->position = pos;
 				// add a new element node on the right
 				x->rchild = temp;
@@ -34,7 +34,7 @@ void BinaryTrie::insert (DataPair &data) {
 			--pos;
 		} else {
 			// if current branch node has no left child
-			if (nullptr == x->lchild) {
+			if (!x->lchild) {
 				temp->position = pos;
 				// add a new element node on the left
 				x->lchild = temp;
@@ -89,7 +89,7 @@ void BinaryTrie::insert (DataPair &data) {
 
 void BinaryTrie::remove (IpAddr ip) {
 	TNode *x = root;	
-	if (nullptr == x) {
+	if (!x) {
 		return;
 	}
 	//store the first redudant branch node
@@ -103,10 +103,10 @@ void BinaryTrie::remove (IpAddr ip) {
 		//if current bit is 1, go to the right
 		if (ip[pos]) {
 			// if fall to an empty node, the key doesn't exist
-			if (nullptr == x->rchild) {
+			if (!x->rchild) {
 				return;
 			}
-			if (nullptr != x->lchild && false != x->rchild->flag) {
+			if (x->lchild && false != x->rchild->flag) {
 				//store the parent of first redundant branch node
 				p = x;
 				//store which side the first redundant branch node belong
@@ -119,10 +119,10 @@ void BinaryTrie::remove (IpAddr ip) {
 		// if current bit is 0, go to the left
 		else {
 			// if fall to an empty node, the key doesn't exist
-			if (nullptr == x->lchild) {
+			if (!x->lchild) {
 				return;
 			}
-			if (nullptr != x->rchild && false != x->lchild->flag) {
+			if (x->rchild && false != x->lchild->flag) {
 				//store the parent of first redundant branch node
 				p = x;
 				//store which side the first redundant branch node belong
@@ -155,7 +155,7 @@ void BinaryTrie::remove (IpAddr ip) {
 				y->rchild = nullptr;
 			}
 			root->position = pos + 1; 
-			delete y;	
+			delete y;
 		}
 		else {
 			// store another node of the deleted node's parent
@@ -187,8 +187,8 @@ void BinaryTrie::remove (IpAddr ip) {
 
 long BinaryTrie::find (const IpAddr ip) const {
 	TNode *x = root;
-	if (nullptr == x) {
-		return -1;
+	if (!x) {
+		return FAILED;
 	}
 	int pos = BITWIDTH - 1;
 	// keep going down until meet a element node
@@ -196,8 +196,8 @@ long BinaryTrie::find (const IpAddr ip) const {
 		//if current bit is 1, go to the right
 		if (ip[pos]) {
 			// if fall to an empty node, the key doesn't exist
-			if (nullptr == x->rchild) {
-				return -1;
+			if (!x->rchild) {
+				return FAILED;
 			}
 			x = x->rchild;
 			--pos;
@@ -205,8 +205,8 @@ long BinaryTrie::find (const IpAddr ip) const {
 		// if current bit is 0, go to the left
 		else {
 			// if fall to an empty node, the key doesn't exist
-			if (nullptr == x->lchild) {
-				return -1;
+			if (!x->lchild) {
+				return FAILED;
 			}
 			x = x->lchild;
 			--pos;
@@ -217,31 +217,54 @@ long BinaryTrie::find (const IpAddr ip) const {
 		// cout << x->position << '\t';
 		return x->data.second;
 	} else {
-		return -1;
+		return FAILED;
 	}
 }
 
-
+// postorder travesal and delete subtries with the same next hop
+// noticed that there is no need to physical delete the subtrie
 void BinaryTrie::postorder_traversal (TNode *node) {
-	if (nullptr == node) {
+	if (!node) {
 		return;
 	}
 	postorder_traversal(node->lchild);
 	postorder_traversal(node->rchild);
 	TNode* left = node->lchild;
 	TNode* right = node->rchild;
-	if (nullptr != left && nullptr != right && false == left->flag && false == right->flag) {
+	//if both left and right child are element node
+	if (left && right && false == left->flag && false == right->flag) {
+		//if they have the same next hop
 		if (left->data.second == right->data.second) {
-			remove(right->data.first);
+			// "merge" them to the parent node, keep next hop infomation
+			node->flag = false;
+			node->data.second = left->data.second;
+			// delete left;
+			// delete right;
+			// node->lchild = nullptr;
+			// node->rchild = nullptr;
 		}
-	}	
+	} 
+	//if left child is element node and right child is empty
+	else if (left && !right && false == left->flag) {
+		node->flag = false;
+		node->data.second = left->data.second;
+		// delete left;
+		// node->lchild = nullptr;
+	} 
+	//if right child is element node and left child is empty
+	else if (!left && right && false == right->flag) {
+		node->flag = false;
+		node->data.second = right->data.second;
+		// delete right;
+		// node->rchild = nullptr;
+	}
 }
 
 int BinaryTrie::get_prefix(const IpAddr ip, int verID, Prefix &pf) {
 	postorder_traversal(root);
 	TNode *x = root;
-	if (nullptr == x) {
-		return -1;
+	if (!x) {
+		return FAILED;
 	}
 	int pos = BITWIDTH - 1;
 	// keep going down until meet a element node
@@ -249,8 +272,8 @@ int BinaryTrie::get_prefix(const IpAddr ip, int verID, Prefix &pf) {
 		//if current bit is 1, go to the right
 		if (ip[pos]) {
 			// if fall to an empty node, the key doesn't exist
-			if (nullptr == x->rchild) {
-				return -1;
+			if (!x->rchild) {
+				return FAILED;
 			}
 			pf.push_back(1);
 			x = x->rchild;
@@ -259,20 +282,16 @@ int BinaryTrie::get_prefix(const IpAddr ip, int verID, Prefix &pf) {
 		// if current bit is 0, go to the left
 		else {
 			// if fall to an empty node, the key doesn't exist
-			if (nullptr == x->lchild) {
-				return -1;
+			if (!x->lchild) {
+				return FAILED;
 			}
 			pf.push_back(0);
 			x = x->lchild;
 			--pos;
 		}
 	}
-	// if fall to an element node, check equality
-	if(verID == x->data.second) {
-		return 0;
-	} else {
-		return -1;
-	}
+	// if fall to an element node, return Success
+	return SUCCESS;
 }
 
 void BinaryTrie::clear() {

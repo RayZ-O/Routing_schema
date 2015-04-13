@@ -4,7 +4,7 @@ int main (int argc, char *argv[]) {
 	std::string filename1, filename2;
 	int source, destination;
 	if(argc != 5) {
-		cerr << "ERROR: Invalid input\n" << "valid format: $ssp[file name][source][destination]\n\n";
+		cerr << "ERROR: Invalid input\n" << "valid format: $routing[file name][source][destination]\n\n";
 		exit(1);
 	}
 	filename1 = argv[1];
@@ -14,5 +14,4 @@ int main (int argc, char *argv[]) {
 	Graph G;
 	G.init_graph(filename1, filename2);
 	G.print_prefix_path(source, destination);
-
 }

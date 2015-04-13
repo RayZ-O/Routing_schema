@@ -61,6 +61,8 @@ public:
 	void print_path(long source, long destination);
 	//print minimum weight, shoertest path with matched prefix
 	void print_prefix_path(long source, long destination);
+	//clear temp stack to store another path
+	void clear_stack(std::stack<long> &s);
 };
 
 
