@@ -109,6 +109,7 @@ void Graph::print() {
  		for(auto ver : vertex_table[i].adjacent_list) {
  			cout << "adjID: " << ver.first << "\tweight:" << ver.second << endl;
  		}
+ 		cout << "IP: " << ip_table[i] << endl;
  		cout << endl;
  	}
 }

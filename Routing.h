@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <stack>
 
+//adjacnet vertex ID and weight of the edge
 typedef std::pair<int, int> adjacent;
 
 class Vertex {	
@@ -33,7 +34,7 @@ private:
 	long numVertices;	//number of vertices
 	long numEdges;		//number of edges
 	std::vector<Vertex> vertex_table;	//vertex table
-	std::vector<IpAddr> ip_table;
+	std::vector<IpAddr> ip_table;		//ip table
 
 	//convert ip address to bitset
 	void ip_to_bit(const std::string ip, IpAddr &bits);
@@ -41,9 +42,9 @@ private:
 	void init_node (long i, HeapNode *myNode);
 	//set previous vertex for vertex i
 	void set_previous(long verID, long previous);
-	//get corresponding heap node for vertex i
+	//get corresponding heap node of vertex i
 	HeapNode* get_node(long i);
-	//relax an edge in Dijkstra's algorithm
+	//relax edges between verID and its adjacency vertices in Dijkstra's algorithm
 	void relax (FibonacciHeap &fh, long verID);	
 	// push the path into a stack
 	int get_path(long source, long destination, std::stack<long> &path);
@@ -60,7 +61,7 @@ public:
 	void init_graph (std::string filename1, std::string filename2);
 	//print the graph infomation	
 	void print();
-	//find shoertest path using Dijkstra's algorithm
+	//find shortest path using Dijkstra's algorithm
 	void shortest_path (long source);		
 	//print minimum weight, shoertest path with matched prefix
 	void print_prefix_path(long source, long destination);
