@@ -25,7 +25,6 @@ void BinaryTrie::insert (DataPair &data) {
 		if (temp->data.first[pos]) {
 			// if current branch node has no right child
 			if (!x->rchild) {
-				temp->position = pos;
 				// add a new element node on the right
 				x->rchild = temp;
 				return;
@@ -35,7 +34,6 @@ void BinaryTrie::insert (DataPair &data) {
 		} else {
 			// if current branch node has no left child
 			if (!x->lchild) {
-				temp->position = pos;
 				// add a new element node on the left
 				x->lchild = temp;
 				return;
@@ -77,8 +75,6 @@ void BinaryTrie::insert (DataPair &data) {
 			y->lchild = temp;
 			y->rchild = x;
 		}
-		y->rchild->position = pos;
-		y->lchild->position = pos;
 	} 
 	// otherwise update the element
 	else {
@@ -94,7 +90,7 @@ void BinaryTrie::remove (IpAddr ip) {
 	}
 	//store the first redudant branch node
 	TNode *y, *p;
-	int pos = BITWIDTH - 1, ppos;
+	int pos = BITWIDTH - 1;
 	bool side;
 	// keep going down until meet a element node
 	while (false != x->flag) {
@@ -111,7 +107,6 @@ void BinaryTrie::remove (IpAddr ip) {
 				p = x;
 				//store which side the first redundant branch node belong
 				side = RIGHT;
-				ppos = pos;
 			}
 			x = x->rchild;
 			--pos;
@@ -127,7 +122,6 @@ void BinaryTrie::remove (IpAddr ip) {
 				p = x;
 				//store which side the first redundant branch node belong
 				side = LEFT;
-				ppos = pos;
 			}
 			x = x->lchild;
 			--pos;
@@ -154,7 +148,6 @@ void BinaryTrie::remove (IpAddr ip) {
 				y->lchild = nullptr;
 				y->rchild = nullptr;
 			}
-			root->position = pos + 1; 
 			delete y;
 		}
 		else {
@@ -169,7 +162,6 @@ void BinaryTrie::remove (IpAddr ip) {
 				y->rchild = nullptr;
 				y->lchild = nullptr;
 			}
-			temp->position = ppos;
 			//delete redundant branch node
 			// shrink another child to right position
 			if (LEFT == side) {
@@ -214,7 +206,6 @@ long BinaryTrie::find (const IpAddr ip) const {
 	}
 	// if fall to an element node, check equality
 	if(ip == x->data.first) {
-		// cout << x->position << '\t';
 		return x->data.second;
 	} else {
 		return FAILED;

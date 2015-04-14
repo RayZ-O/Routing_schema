@@ -27,8 +27,7 @@ struct TNode {
 	DataPair data;
 	TNode *lchild;
 	TNode *rchild;
-	int position;
-	TNode() : flag(true), data(), lchild(nullptr), rchild(nullptr), position(BITWIDTH) { }
+	TNode() : flag(true), data(), lchild(nullptr), rchild(nullptr) { }
 	TNode(const TNode &copyMe) = delete;
 	TNode& operator = (const TNode &copyMe) = delete;
 	~TNode() {
