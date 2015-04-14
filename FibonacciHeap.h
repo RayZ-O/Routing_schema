@@ -13,22 +13,22 @@ using std::cerr;
 using std::endl;
 
 //node of fibonacci heap
-class Node	{
+class HeapNode	{
 friend class FibonacciHeap;
 private:
 	long data;
 	long verID;
 	int degree;
 	bool childCut;
-	Node *parent;
-	Node *child;
-	Node *lsibling;
-	Node *rsibling;
-	Node () : data(-1), verID(-1), degree(0), childCut(false), parent(nullptr), child(nullptr), lsibling(nullptr), rsibling(nullptr) { }
+	HeapNode *parent;
+	HeapNode *child;
+	HeapNode *lsibling;
+	HeapNode *rsibling;
+	HeapNode () : data(-1), verID(-1), degree(0), childCut(false), parent(nullptr), child(nullptr), lsibling(nullptr), rsibling(nullptr) { }
 	//delete default copy constructor and copy assignment
-	Node (const Node &copyMe) = delete;
-	Node & operator = (const Node &copyMe) = delete; 
-	~Node() {
+	HeapNode (const HeapNode &copyMe) = delete;
+	HeapNode & operator = (const HeapNode &copyMe) = delete; 
+	~HeapNode() {
 		if (child != nullptr) {
 			delete child;
 			child = nullptr;
@@ -42,21 +42,21 @@ private:
 
 class FibonacciHeap {
 private:	
-	Node *minNode;	//pointer to minimum node 
+	HeapNode *minNode;	//pointer to minimum node 
 	int numItem;	//number of nodes in the heap
 	// remove node from doubly linked list
-	void list_remove(Node *eraseMe);
+	void list_remove(HeapNode *eraseMe);
 	// meld two doubly linked list
-	void meld_list (Node *firstListNode, Node *secondListNode);
+	void meld_list (HeapNode *firstListNode, HeapNode *secondListNode);
 	// cut the subtree rooted in rootIn and meld the tree to top list
-	void cut_subtree (Node *rootIn);
+	void cut_subtree (HeapNode *rootIn);
 	// cascading cut from beginNode to root
-	void cascading_cut (Node *beginNode);
+	void cascading_cut (HeapNode *beginNode);
 	// exchange two node pointer
-	void exchange(Node **x, Node **y);
+	void exchange(HeapNode **x, HeapNode **y);
 	// combine two tree, insert the tree with bigger root to the children list of another
-	void combine_trees (Node *y, Node *x);
-	// piarwise combine all trees with the same degree in the heap
+	void combine_trees (HeapNode *y, HeapNode *x);
+	// pairwise combine all trees with the same degree in the heap
 	void pairwise_combine ();
 	
 public:
@@ -66,15 +66,15 @@ public:
 	FibonacciHeap (const FibonacciHeap &copyMe) = delete;
 	FibonacciHeap & operator = (const FibonacciHeap &copyMe) = delete;
 	// insert node into the heap and set corresponding vertex ID
-	Node* insert (long item, long verID);
+	HeapNode* insert (long item, long verID);
 	// remove min element in the heap
 	long remove_min (long &verID);
 	// remove arbitrary node
-	void remove (Node *removeMe);
+	void remove (HeapNode *removeMe);
 	// meld heap
 	void meld (FibonacciHeap &heap);
 	// decrease key of decMe to be newData
-	void decrease_key (Node *decMe, long newData);
+	void decrease_key (HeapNode *decMe, long newData);
 	// return size of this heap
 	int size();
 };

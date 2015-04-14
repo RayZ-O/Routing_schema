@@ -5,11 +5,11 @@ BinaryTrie::~BinaryTrie() {
 }
 
 void BinaryTrie::insert (DataPair &data) {
-	TNode *temp = new TNode();
+	TrieNode *temp = new TrieNode();
 	temp->flag = false;
 	temp->data = std::move(data);
 
-	TNode *x = root;
+	TrieNode *x = root;
 	
 	// if the trie is empty, add the element as new root
 	if (!x) {
@@ -17,7 +17,7 @@ void BinaryTrie::insert (DataPair &data) {
 		return;
 	} 
 	int pos = BITWIDTH - 1;
-	TNode *y = x;
+	TrieNode *y = x;
 	// scan from high to low	
 	while (false != x->flag) {
 		// pointer to record the parent node
@@ -44,7 +44,7 @@ void BinaryTrie::insert (DataPair &data) {
 	}
 	// if only one node in the trie, add new branch node as root
 	if (BITWIDTH - 1 == pos) {
-		root = new TNode();
+		root = new TrieNode();
 		y = root;
 	} else {
 		// move back one bit for building branch node
@@ -56,12 +56,12 @@ void BinaryTrie::insert (DataPair &data) {
 		while (temp->data.first[pos] == x->data.first[pos]) {
 			//if current bit is 1, add branch node on the right
 			if (temp->data.first[pos]) {
-				y->rchild = new TNode();
+				y->rchild = new TrieNode();
 				y = y->rchild;
 			} 
 			//if current bit is 1, add branch node on the left
 			else {
-				y->lchild = new TNode();
+				y->lchild = new TrieNode();
 				y = y->lchild;
 			}
 			--pos;
@@ -84,12 +84,12 @@ void BinaryTrie::insert (DataPair &data) {
 
 
 void BinaryTrie::remove (IpAddr ip) {
-	TNode *x = root;	
+	TrieNode *x = root;	
 	if (!x) {
 		return;
 	}
 	//store the first redudant branch node
-	TNode *y, *p;
+	TrieNode *y, *p;
 	int pos = BITWIDTH - 1;
 	bool side;
 	// keep going down until meet a element node
@@ -152,7 +152,7 @@ void BinaryTrie::remove (IpAddr ip) {
 		}
 		else {
 			// store another node of the deleted node's parent
-			TNode *temp = nullptr;
+			TrieNode *temp = nullptr;
 			if(ip[pos+1]) {
 				temp = y->lchild;
 				y->lchild = nullptr;
@@ -178,7 +178,7 @@ void BinaryTrie::remove (IpAddr ip) {
 }
 
 long BinaryTrie::find (const IpAddr ip) const {
-	TNode *x = root;
+	TrieNode *x = root;
 	if (!x) {
 		return FAILED;
 	}
@@ -214,14 +214,14 @@ long BinaryTrie::find (const IpAddr ip) const {
 
 // postorder travesal and delete subtries with the same next hop
 // noticed that there is no need to physical delete the subtrie
-void BinaryTrie::postorder_traversal (TNode *node) {
+void BinaryTrie::postorder_traversal (TrieNode *node) {
 	if (!node) {
 		return;
 	}
 	postorder_traversal(node->lchild);
 	postorder_traversal(node->rchild);
-	TNode* left = node->lchild;
-	TNode* right = node->rchild;
+	TrieNode* left = node->lchild;
+	TrieNode* right = node->rchild;
 	//if both left and right child are element node
 	if (left && right && false == left->flag && false == right->flag) {
 		//if they have the same next hop
@@ -251,9 +251,9 @@ void BinaryTrie::postorder_traversal (TNode *node) {
 	}
 }
 
-int BinaryTrie::get_prefix(const IpAddr ip, int verID, Prefix &pf) {
+int BinaryTrie::get_prefix(const IpAddr ip, Prefix &pf) {
 	postorder_traversal(root);
-	TNode *x = root;
+	TrieNode *x = root;
 	if (!x) {
 		return FAILED;
 	}

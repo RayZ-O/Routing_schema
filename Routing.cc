@@ -78,7 +78,7 @@ void Graph::ip_to_bit(const std::string ip, IpAddr &bits) {
 	bits |= IpAddr(std::stoi(str));
 }
 //initialize corresponding heap node for vertex i
-void Graph::init_node (long verID, Node *myNode){
+void Graph::init_node (long verID, HeapNode *myNode){
 	if (nullptr == myNode) {
 		cerr << "Null pointer exception in init_node\n";
 		exit(1);
@@ -92,7 +92,7 @@ void Graph::set_previous(long verID, long previous) {
 }
 
 //get corresponding heap node for vertex i
-Node* Graph::get_node(long verID) {
+HeapNode* Graph::get_node(long verID) {
 	if (nullptr == vertex_table[verID].myNode) {
 		cerr << "Null pointer exception in get_node\n";
 		exit(1);
@@ -242,7 +242,7 @@ void Graph::print_prefix_path(long source, long destination) {
 			s = path.top();
 			Prefix pf;
 			// post order traversal and get prefix match
-			if (0 != trie.get_prefix(ip_table[destination], destination, pf)){
+			if (0 != trie.get_prefix(ip_table[destination], pf)){
 				cerr << "Not in Trie";
 			} else {
 				for(auto bit : pf) {

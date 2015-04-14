@@ -12,8 +12,8 @@ FibonacciHeap :: ~FibonacciHeap (){
 
 // Add a new single-node min tree to the collection
 // Update min-element pointer if necessary
-Node* FibonacciHeap :: insert (long item, long verID){
-	Node *temp = new (std::nothrow) Node;
+HeapNode* FibonacciHeap :: insert (long item, long verID){
+	HeapNode *temp = new (std::nothrow) HeapNode;
 	if (nullptr == temp) {
 		cerr << "ERROR : Not enough memory. EXIT !!!\n";
 		exit(1);
@@ -82,7 +82,7 @@ long FibonacciHeap :: remove_min (long &verID){
 	long item = minNode->data;
 	//if minNode has children
 	if (minNode->child != nullptr) {
-		Node *c = minNode->child;
+		HeapNode *c = minNode->child;
 		//set all children's parent field to nullptr and childCut field to false
 		for (int i = 0; i < minNode->degree; ++i) {
 			c->parent = nullptr;
@@ -103,7 +103,7 @@ long FibonacciHeap :: remove_min (long &verID){
 		delete minNode;
 		minNode = nullptr;
 	} else {
-		Node *temp = minNode->rsibling;
+		HeapNode *temp = minNode->rsibling;
 		minNode->rsibling = nullptr;
 		minNode->lsibling = nullptr;
 		delete minNode;
@@ -118,7 +118,7 @@ long FibonacciHeap :: remove_min (long &verID){
 }
 
 // Decrease rmMe to minus infinite then remove min
-void FibonacciHeap :: remove (Node *rmMe){
+void FibonacciHeap :: remove (HeapNode *rmMe){
 	if (nullptr == rmMe) {
 		cerr << "ERROR: Attempt to remove non-exist node\n";
 		exit(1);
@@ -131,7 +131,7 @@ void FibonacciHeap :: remove (Node *rmMe){
 }
 
 // Decrease the key of decMe to newData
-void FibonacciHeap :: decrease_key (Node *decMe, long newData){
+void FibonacciHeap :: decrease_key (HeapNode *decMe, long newData){
 	if (nullptr == decMe) {
 		cerr << "ERROR: Attempt to decrease non-exist node\n";
 		exit(1);
@@ -142,7 +142,7 @@ void FibonacciHeap :: decrease_key (Node *decMe, long newData){
 	//decrease the key of decMe
 	decMe->data = newData;
 	//if decMe has parent and the key of the node less than parent, cut the subtree root in the node
-	Node *p = decMe->parent;
+	HeapNode *p = decMe->parent;
 	if (p != nullptr && decMe->data < p->data) {		
 		//cut the subtree rooted in the node
 		cut_subtree(decMe);
@@ -161,7 +161,7 @@ int FibonacciHeap :: size () {
 }
 
 // Remove node from doubly linked list
-void FibonacciHeap :: list_remove(Node *eraseMe) {
+void FibonacciHeap :: list_remove(HeapNode *eraseMe) {
 	// if(eraseMe->lsibling == nullptr || eraseMe->rsibling == nullptr || eraseMe->lsibling->rsibling == nullptr || eraseMe->rsibling->lsibling ==nullptr){
 	// 	cerr << "Null pointer exception in list_remove\n";
 	// 	exit(1);
@@ -174,7 +174,7 @@ void FibonacciHeap :: list_remove(Node *eraseMe) {
 
 
 // Meld two doubly linked list
-void FibonacciHeap :: meld_list (Node *firstListNode, Node *secondListNode) {
+void FibonacciHeap :: meld_list (HeapNode *firstListNode, HeapNode *secondListNode) {
 	// if(firstListNode->lsibling == nullptr || firstListNode->rsibling == nullptr || secondListNode->lsibling == nullptr || secondListNode->rsibling == nullptr){
 	// 	cerr << "Null pointer exception in meld_list\n";
 	// 	exit(1);
@@ -186,8 +186,8 @@ void FibonacciHeap :: meld_list (Node *firstListNode, Node *secondListNode) {
 }
 
 // Cut the subtree rooted in rootIn
-void FibonacciHeap :: cut_subtree(Node *rootIn){
-	Node *p = rootIn->parent;
+void FibonacciHeap :: cut_subtree(HeapNode *rootIn){
+	HeapNode *p = rootIn->parent;
 	//decrement degree
 	p->degree -= 1;
 	//if rootIn's parent has no more child
@@ -208,13 +208,13 @@ void FibonacciHeap :: cut_subtree(Node *rootIn){
 }
 
 // Cascading cut when performing remove and decrease key
-void FibonacciHeap :: cascading_cut(Node *curNode){	
+void FibonacciHeap :: cascading_cut(HeapNode *curNode){	
 	//if curNode has parent
 	if (curNode->parent != nullptr) {		
 		if (false == curNode->childCut) {
 			curNode->childCut = true;
 		} else {
-			Node *p = curNode->parent;
+			HeapNode *p = curNode->parent;
 			cut_subtree(curNode);
 			cascading_cut(p);
 		}
@@ -222,15 +222,15 @@ void FibonacciHeap :: cascading_cut(Node *curNode){
 }
 
 // Exchange two node pointer
-void FibonacciHeap :: exchange(Node **x, Node **y) {
-	Node *temp;
+void FibonacciHeap :: exchange(HeapNode **x, HeapNode **y) {
+	HeapNode *temp;
 	temp = *x;
 	*x = *y;
 	*y = temp;
 }
 
 // Combine two tree, insert the tree with bigger root to the children list of another
-void FibonacciHeap :: combine_trees (Node *y, Node *x) {
+void FibonacciHeap :: combine_trees (HeapNode *y, HeapNode *x) {
 	//remove y from top list
 	list_remove(y);
 	//if x has no child
@@ -252,15 +252,15 @@ void FibonacciHeap :: pairwise_combine(){
 	//the max degree of trees in the heap is log2(n)
 	int max_degree = log2(numItem)/logGoldenRatio + 1;
 	//create the degree table
-	std::vector<Node*> tree;
+	std::vector<HeapNode*> tree;
 	tree.reserve(max_degree); 
 	// initialize tree table
 	for(int i = 0; i < max_degree; i++) {
 		tree[i] = nullptr;
 	}
 	// store all nodes in the top list
-	std::vector<Node*> nodes;
-	Node *x = minNode;
+	std::vector<HeapNode*> nodes;
+	HeapNode *x = minNode;
 	do {
 		nodes.push_back(x);
 		x = x->rsibling;
@@ -271,7 +271,7 @@ void FibonacciHeap :: pairwise_combine(){
 		int d = x->degree;
 		// x's degree appears in tree table
 		while (tree[d] != nullptr) {
-			Node *y = tree[d];
+			HeapNode *y = tree[d];
 			if (x->data > y->data) {
 				exchange(&x, &y);
 			}
