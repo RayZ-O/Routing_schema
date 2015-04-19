@@ -250,7 +250,7 @@ void Graph::print_prefix_path(long source, long destination) {
 					cout << bit;
 				}
 			}			
-			cout << "_" << s << " ";
+			cout << " ";
 			trie.clear();
 			pf.clear();
 			// perform shortest path for next-hop
